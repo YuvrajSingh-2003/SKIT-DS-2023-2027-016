@@ -1,5 +1,6 @@
 import logging
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +20,19 @@ CORS_ORIGINS = [
     if origin.strip()
 ]
 
-app = FastAPI(title="ChainShield API")
+# Schema setup runs when the server starts, not at import, so importing the app
+# (tests, tools) never touches the database. app/server.py adds its own hook.
+STARTUP_HOOKS = [ensure_schema]
+
+
+@asynccontextmanager
+async def lifespan(_app):
+    for hook in STARTUP_HOOKS:
+        hook()
+    yield
+
+
+app = FastAPI(title="ChainShield API", lifespan=lifespan)
 
 
 app.add_middleware(
@@ -37,6 +50,3 @@ def home():
 
 
 app.include_router(scan_router)
-
-# Runs after the models are imported so every table is created.
-ensure_schema()

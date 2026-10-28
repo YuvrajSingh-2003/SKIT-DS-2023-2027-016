@@ -1,11 +1,19 @@
 import logging
+import os
+from pathlib import Path
 
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = "sqlite:///./chainshield.db"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+# Anchored to the project root so the database does not depend on the working
+# directory. CHAINSHIELD_DATABASE_URL overrides it (e.g. an isolated test database).
+DATABASE_URL = os.getenv(
+    "CHAINSHIELD_DATABASE_URL", f"sqlite:///{PROJECT_ROOT / 'chainshield.db'}"
+)
 
 engine = create_engine(
     DATABASE_URL,
