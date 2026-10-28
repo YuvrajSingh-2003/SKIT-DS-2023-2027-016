@@ -325,10 +325,11 @@ class TestABIExport:
         assert ABI_PATH.parent.exists(), \
             f"ABI directory does not exist: {ABI_PATH.parent}"
 
-    def test_write_abi_artifact(self, abi):
-        """Write compiled ABI to contracts/abi/ThreatRegistry.json."""
-        ABI_PATH.write_text(json.dumps(abi, indent=2) + "\n", encoding="utf-8")
-        assert ABI_PATH.exists()
-        # Verify round-trip
+    def test_committed_abi_matches_compiled_contract(self, abi):
+        """contracts/abi/ThreatRegistry.json must equal the compiled ABI.
+
+        Read-only: the committed ABI belongs to the deployed contract and is used by
+        the backend, so a test must never rewrite it.
+        """
         loaded = json.loads(ABI_PATH.read_text(encoding="utf-8"))
         assert loaded == abi
