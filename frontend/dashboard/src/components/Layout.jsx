@@ -140,8 +140,11 @@ export default function Layout() {
             <span>ChainShield</span>
           </div>
           <div className="topbar-right">
-            <span className="topbar-badge">
-              <span className="status-dot" aria-hidden="true" />
+            {/* A label, not a live status: registry availability is shown per scan result. */}
+            <span
+              className="topbar-badge"
+              title="Scans include a blockchain registry check when it is available; each result shows the registry status"
+            >
               Blockchain Registry
             </span>
           </div>

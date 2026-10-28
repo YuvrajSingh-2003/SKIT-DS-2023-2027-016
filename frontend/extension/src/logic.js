@@ -11,7 +11,9 @@
   "use strict";
 
   const MAX_MESSAGE_CHARS = 2000;
-  const DEFAULT_TIMEOUT_MS = 15000;
+  // Matches the dashboard: a scan can wait on several registry RPC calls
+  // (10 s timeout each) plus the model. A timeout is an error, never a result.
+  const DEFAULT_TIMEOUT_MS = 60000;
 
   function isValidUrl(value) {
     try {
@@ -58,7 +60,7 @@
       let detail = "";
       try {
         const data = await response.json();
-        detail = typeof data.detail === "string" ? data.detail : "";
+        detail = formatDetail(data.detail);
       } catch { /* ignore */ }
       throw { type: "http", message: `Server error ${response.status}${detail ? `: ${detail}` : ""}. No result is available.` };
     }
@@ -68,6 +70,15 @@
     } catch {
       throw { type: "parse", message: "Unexpected response from the server. No result is available." };
     }
+  }
+
+  /** FastAPI validation errors (422) carry `detail` as a list of {msg}. */
+  function formatDetail(detail) {
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) {
+      return detail.map((item) => (item && typeof item.msg === "string" ? item.msg : "")).filter(Boolean).join("; ");
+    }
+    return "";
   }
 
   function malformed() {
@@ -112,7 +123,8 @@
   const MESSAGE_STATES = {
     smishing_registry_match: { cls: "badge-high", label: "✕ Known smishing (registry match)",
       text: "This exact message is registered as a known threat in the ChainShield registry." },
-    likely_smishing: { cls: "badge-high", label: "! Likely smishing",
+    // Backend risk MEDIUM, so the same colour as a suspicious URL (as on the dashboard).
+    likely_smishing: { cls: "badge-medium", label: "! Likely smishing",
       text: "The model predicts this is a phishing (smishing) message. Predictions can be wrong." },
     generic_spam: { cls: "badge-medium", label: "Generic spam",
       text: "The model predicts unsolicited spam, not smishing. Predictions can be wrong." },

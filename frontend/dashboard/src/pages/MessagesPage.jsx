@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getMessageHistory, scanMessage } from "../api.js";
 import RiskBadge from "../components/RiskBadge.jsx";
+import { failureText, registryLabel } from "../riskLabels.js";
 import "./MessagesPage.css";
 
 const MAX_CHARS = 2000;
@@ -170,7 +171,7 @@ export default function MessagesPage() {
       {loading && <div className="card" aria-busy="true">Scanning…</div>}
       {!loading && error && (
         <div className="error-box" role="alert">
-          <strong>Scan failed:</strong> {error.message || "Unknown error"}. No result is available.
+          <strong>Scan failed:</strong> {failureText(error)}
         </div>
       )}
       {!loading && result && <MessageResult result={result} />}
@@ -195,7 +196,7 @@ export default function MessagesPage() {
                 <td>{VERDICTS[item.verdict]?.title || item.verdict}</td>
                 <td><RiskBadge level={item.risk_level} /></td>
                 <td>{percent(item.probability_smishing)}</td>
-                <td>{item.registry_status}</td>
+                <td>{registryLabel(item.registry_status)}</td>
                 <td>{item.message_length}</td>
               </tr>
             ))}

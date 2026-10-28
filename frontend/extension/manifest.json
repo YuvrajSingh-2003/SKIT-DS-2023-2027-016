@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ChainShield",
   "version": "0.1.0",
-  "description": "Blockchain-backed phishing and smishing URL detection by ChainShield.",
+  "description": "Checks URLs for phishing and text messages for smishing, using a blockchain threat registry and ML models.",
 
   "action": {
     "default_popup": "popup.html",

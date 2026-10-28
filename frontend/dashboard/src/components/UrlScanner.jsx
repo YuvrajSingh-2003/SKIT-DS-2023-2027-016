@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { scanUrl } from "../api.js";
 import ScanResult from "./ScanResult.jsx";
+import { failureText } from "../riskLabels.js";
 import "./UrlScanner.css";
 
 // ─── Simple client-side URL validation ───────────────────────────────────────
@@ -130,12 +131,12 @@ export default function UrlScanner({ initialUrl = "" }) {
       {/* ── API error ── */}
       {!loading && apiError && (
         <div className="error-box scanner-error" role="alert">
-          <strong>Scan failed:</strong> {apiError.message}
-          {apiError.type === "network" && (
+          <strong>Scan failed:</strong> {failureText(apiError)}
+          {(apiError.type === "network" || apiError.type === "timeout") && (
             <p className="scanner-error-hint">
               Make sure the backend is running at{" "}
               <code>
-                {import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000"}
+                {import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"}
               </code>
             </p>
           )}

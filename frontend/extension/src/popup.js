@@ -140,6 +140,7 @@ function renderUrlResult(data) {
   resultBadge.className = `badge ${view.badgeClass}`;
   resultBadge.textContent = view.badgeLabel;
   resultDomain.textContent = typeof data.domain === "string" ? data.domain : "";
+  resultDomain.classList.remove("result-explanation");
 
   detailHttps.hidden = false;
   detailIp.hidden = false;
@@ -166,6 +167,7 @@ function renderMessageResult(data) {
   resultBadge.className = `badge ${view.badgeClass}`;
   resultBadge.textContent = view.badgeLabel;
   resultDomain.textContent = view.explanation;
+  resultDomain.classList.add("result-explanation");
 
   detailHttps.hidden = true;
   detailIp.hidden = true;

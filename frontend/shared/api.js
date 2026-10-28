@@ -13,6 +13,18 @@
 // In ES modules / browser contexts, default to the local FastAPI server.
 export const DEFAULT_BASE_URL = "http://127.0.0.1:8000";
 
+// A scan can wait on several registry RPC calls (10 s timeout each) plus the
+// model, so allow up to a minute before giving up. A timeout is an error, never a result.
+export const DEFAULT_TIMEOUT_MS = 60000;
+
+/** FastAPI validation errors (422) carry `detail` as a list of {loc, msg}. */
+function formatDetail(detail) {
+  if (Array.isArray(detail)) {
+    return detail.map((item) => (item && item.msg) || JSON.stringify(item)).join("; ");
+  }
+  return typeof detail === "string" ? detail : JSON.stringify(detail);
+}
+
 // ─── Core fetch wrapper ───────────────────────────────────────────────────────
 /**
  * Generic fetch helper. Throws a structured error object on any failure so
@@ -23,31 +35,42 @@ export const DEFAULT_BASE_URL = "http://127.0.0.1:8000";
  * @param {string} [baseUrl] - override for caller (dashboard or extension)
  * @returns {Promise<any>}   - parsed JSON body
  */
-export async function apiFetch(path, options = {}, baseUrl = DEFAULT_BASE_URL) {
+export async function apiFetch(path, options = {}, baseUrl = DEFAULT_BASE_URL, timeoutMs = DEFAULT_TIMEOUT_MS) {
   // Normalize base URL without trailing slash
   const cleanBase = (baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, "");
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   const url = `${cleanBase}${cleanPath}`;
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   let response;
   try {
     response = await fetch(url, {
       headers: { "Content-Type": "application/json" },
       ...options,
+      signal: controller.signal,
     });
   } catch (networkError) {
+    if (networkError?.name === "AbortError") {
+      throw {
+        type: "timeout",
+        message: "The ChainShield backend did not respond in time. No result is available.",
+      };
+    }
     throw {
       type: "network",
       message: "Cannot reach the ChainShield backend. Is the server running?",
       detail: networkError?.message || String(networkError),
     };
+  } finally {
+    clearTimeout(timer);
   }
 
   if (!response.ok) {
     let detail = "";
     try {
       const body = await response.json();
-      detail = body.detail || body.message || JSON.stringify(body);
+      detail = formatDetail(body.detail || body.message || body);
     } catch {
       detail = await response.text().catch(() => "");
     }

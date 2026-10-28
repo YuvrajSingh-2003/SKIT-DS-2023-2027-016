@@ -153,6 +153,13 @@ a { color: var(--teal); }
   white-space: nowrap;
 }
 
+/* Message results reuse this element for a full sentence: wrap it, normal font. */
+.result-domain.result-explanation {
+  font-family: inherit;
+  white-space: normal;
+  overflow: visible;
+}
+
 /* Risk badge */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;

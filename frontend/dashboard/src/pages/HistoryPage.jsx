@@ -42,9 +42,8 @@ function EmptyHistory() {
  * A single collapsible row in the history table.
  * Clicking it expands/collapses the full ScanResult detail panel.
  *
- * NOTE: history records from GET /scan/history do NOT include
- * blockchain_available or blockchain_found — those fields are not persisted.
- * ScanResult handles this gracefully (no blockchain section shown when absent).
+ * History records include blockchain_status (older rows: "not_recorded",
+ * "unavailable", "no_match" or "match_unclassified"); ScanResult explains each.
  */
 function HistoryRow({ item }) {
   const [expanded, setExpanded] = useState(false);
@@ -122,8 +121,8 @@ export default function HistoryPage() {
             Scan History
           </h1>
           <p className="section-subtitle" style={{ margin: 0 }}>
-            All URLs previously scanned during this session. Click a row to
-            expand details.
+            URL scans saved by the backend, newest first. Click a row to expand
+            details.
           </p>
         </div>
         <button

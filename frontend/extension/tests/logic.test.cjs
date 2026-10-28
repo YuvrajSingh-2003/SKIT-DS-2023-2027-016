@@ -82,3 +82,19 @@ test("registered non-threat URL is not shown as a registry match", () => {
   // Older backend without blockchain_status keeps the previous behavior.
   assert.equal(L.describeUrlResult({ ...base, risk_level: "HIGH" }).state, "registry_match");
 });
+
+test("422 validation details are shown as readable text", async () => {
+  const response = { ok: false, status: 422, json: async () => ({ detail: [{ loc: ["body", "text"], msg: "Value error, text must not be blank" }] }) };
+  await assert.rejects(L.postJson(async () => response, "http://h", "/message/scan", {}),
+    (e) => e.type === "http" && /422: Value error, text must not be blank/.test(e.message) && !/object/.test(e.message));
+});
+
+test("timeout matches the dashboard and outlasts the backend's registry timeouts", () => {
+  assert.equal(L.DEFAULT_TIMEOUT_MS, 60000);
+});
+
+test("likely smishing uses the MEDIUM colour, registry matches use HIGH", () => {
+  const base = { model: { status: "ok" }, registry: { status: "no_match" }, findings: [] };
+  assert.equal(L.describeMessageResult({ ...base, verdict: "likely_smishing" }).badgeClass, "badge-medium");
+  assert.equal(L.describeMessageResult({ ...base, verdict: "smishing_registry_match", registry: { status: "match_threat" } }).badgeClass, "badge-high");
+});

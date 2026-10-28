@@ -9,12 +9,14 @@ export default defineConfig({
     // Proxy API calls to the FastAPI backend during development.
     // This avoids CORS issues when running frontend on :5173 and
     // backend on :8000 simultaneously.
+    // Keys starting with "^" are regular expressions. They are anchored so the
+    // dashboard's own routes (/scanner, /messages) are not sent to the backend.
     proxy: {
-      "/scan": {
+      "^/scan(/|$)": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
       },
-      "/message": {
+      "^/message/": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
       },

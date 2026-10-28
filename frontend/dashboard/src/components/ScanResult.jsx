@@ -173,7 +173,7 @@ export default function ScanResult({ result }) {
       <div className="divider" />
       <p className="sr-disclaimer">
         ChainShield combines heuristic checks, an advisory URL model and a blockchain threat registry.
-        A "Safe" result does not guarantee the URL is free from all threats.
+        A "No issues detected" result does not guarantee the URL is free from all threats.
         Exercise caution before visiting unknown links.
       </p>
     </div>
