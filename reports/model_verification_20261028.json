@@ -1,0 +1,282 @@
+{
+ "generated_at": "2026-10-28T17:33:36.129474+00:00",
+ "note": "Validation re-measurement and leakage checks; test results are historical copies.",
+ "url_model": {
+  "model": "xgboost",
+  "threshold": 0.5,
+  "split_file_sha256": "3d10e1836b7827ce56f54a1c75fe4ef0549e9b64c394f8bd9714b6ce8462f48d",
+  "validation_rows": 35305,
+  "validation_phishing": 15078,
+  "validation_measured": {
+   "precision": 0.9826369673491976,
+   "recall": 0.9421010744130521,
+   "f1": 0.9619421683483442,
+   "confusion_matrix": {
+    "tn": 19976,
+    "fp": 251,
+    "fn": 873,
+    "tp": 14205
+   },
+   "roc_auc": 0.98733800827382
+  },
+  "validation_recorded_at_training": {
+   "phishing_precision": 0.9826369673491976,
+   "phishing_recall": 0.9421010744130521,
+   "phishing_f1": 0.9619421683483442,
+   "roc_auc": 0.98733800827382
+  },
+  "api_path_matches_batch": {
+   "sample": 300,
+   "max_abs_score_difference": 0.0
+  },
+  "template_artifact": {
+   "legitimate_with_path_or_query": 0,
+   "legitimate_total": 20227,
+   "phishing_with_path_or_query": 4214,
+   "phishing_total": 15078,
+   "false_positives_with_path": 0
+  },
+  "test_historical": {
+   "threshold": 0.5,
+   "accuracy": 0.9692970033422081,
+   "phishing_precision": 0.9846239091286881,
+   "phishing_recall": 0.9428306141398063,
+   "phishing_f1": 0.9632741563897547,
+   "roc_auc": 0.9882325128631099,
+   "pr_auc": 0.9891871249341039,
+   "confusion_matrix": {
+    "true_legitimate_pred_legitimate": 20006,
+    "true_legitimate_pred_phishing": 222,
+    "true_phishing_pred_legitimate": 862,
+    "true_phishing_pred_phishing": 14216
+   },
+   "rows": 35306
+  }
+ },
+ "sms_model": {
+  "model": "char25_C10",
+  "split_file_sha256": "24d7e8849017938885e6ed9062b9bc4d53a87e2cbe9e8b5c968b53b5dc5d7930",
+  "validation_rows": 865,
+  "validation_measured": {
+   "per_class": {
+    "legitimate": {
+     "precision": 0.9877049180327869,
+     "recall": 0.9972413793103448,
+     "f1": 0.9924502402196294,
+     "support": 725
+    },
+    "generic_spam": {
+     "precision": 0.8688524590163934,
+     "recall": 0.8412698412698413,
+     "f1": 0.8548387096774194,
+     "support": 63
+    },
+    "smishing": {
+     "precision": 0.9583333333333334,
+     "recall": 0.8961038961038961,
+     "f1": 0.9261744966442953,
+     "support": 77
+    }
+   },
+   "macro_f1": 0.9244878155137813,
+   "confusion_matrix": {
+    "labels": [
+     "legitimate",
+     "generic_spam",
+     "smishing"
+    ],
+    "rows_true_cols_pred": [
+     [
+      723,
+      2,
+      0
+     ],
+     [
+      7,
+      53,
+      3
+     ],
+     [
+      2,
+      6,
+      69
+     ]
+    ]
+   }
+  },
+  "validation_recorded_at_selection": {
+   "per_class": {
+    "legitimate": {
+     "precision": 0.9877049180327869,
+     "recall": 0.9972413793103448,
+     "f1": 0.9924502402196294,
+     "support": 725
+    },
+    "generic_spam": {
+     "precision": 0.8688524590163934,
+     "recall": 0.8412698412698413,
+     "f1": 0.8548387096774194,
+     "support": 63
+    },
+    "smishing": {
+     "precision": 0.9583333333333334,
+     "recall": 0.8961038961038961,
+     "f1": 0.9261744966442953,
+     "support": 77
+    }
+   },
+   "macro_f1": 0.9244878155137813,
+   "weighted_f1": 0.9765279758503116,
+   "confusion_matrix": {
+    "labels": [
+     "legitimate",
+     "generic_spam",
+     "smishing"
+    ],
+    "rows_true_cols_pred": [
+     [
+      723,
+      2,
+      0
+     ],
+     [
+      7,
+      53,
+      3
+     ],
+     [
+      2,
+      6,
+      69
+     ]
+    ]
+   },
+   "undefined_precision": [],
+   "generic_spam_predicted_smishing": {
+    "count": 3,
+    "of": 63,
+    "rate": 0.047619047619047616
+   },
+   "legitimate_predicted_smishing": {
+    "count": 0,
+    "of": 725,
+    "rate": 0.0
+   }
+  },
+  "missed_smishing": {
+   "count": 8,
+   "predicted_as": {
+    "generic_spam": 6,
+    "legitimate": 2
+   },
+   "with_link_like_text": 4
+  },
+  "test_historical": {
+   "evaluated_at": "2026-10-28T12:29:22.214436+00:00",
+   "rows": 865,
+   "metrics": {
+    "per_class": {
+     "legitimate": {
+      "precision": 0.9890859481582538,
+      "recall": 1.0,
+      "f1": 0.9945130315500685,
+      "support": 725
+     },
+     "generic_spam": {
+      "precision": 0.8448275862068966,
+      "recall": 0.7777777777777778,
+      "f1": 0.8099173553719008,
+      "support": 63
+     },
+     "smishing": {
+      "precision": 0.8918918918918919,
+      "recall": 0.8571428571428571,
+      "f1": 0.8741721854304636,
+      "support": 77
+     }
+    },
+    "macro_f1": 0.8928675241174776,
+    "weighted_f1": 0.9703560688328037,
+    "confusion_matrix": {
+     "labels": [
+      "legitimate",
+      "generic_spam",
+      "smishing"
+     ],
+     "rows_true_cols_pred": [
+      [
+       725,
+       0,
+       0
+      ],
+      [
+       6,
+       49,
+       8
+      ],
+      [
+       2,
+       9,
+       66
+      ]
+     ]
+    },
+    "undefined_precision": [],
+    "generic_spam_predicted_smishing": {
+     "count": 8,
+     "of": 63,
+     "rate": 0.12698412698412698
+    },
+    "legitimate_predicted_smishing": {
+     "count": 0,
+     "of": 725,
+     "rate": 0.0
+    }
+   }
+  }
+ },
+ "leakage": {
+  "sms_exact_text": {
+   "train&val": 0,
+   "train&test": 0,
+   "val&test": 0
+  },
+  "sms_group_id": {
+   "train&val": 0,
+   "train&test": 0,
+   "val&test": 0
+  },
+  "sms_registry_hash": {
+   "train&val": 0,
+   "train&test": 0,
+   "val&test": 0
+  },
+  "sms_class_counts": {
+   "train": {
+    "legitimate": 3384,
+    "smishing": 356,
+    "generic_spam": 292
+   },
+   "val": {
+    "legitimate": 725,
+    "smishing": 77,
+    "generic_spam": 63
+   },
+   "test": {
+    "legitimate": 725,
+    "smishing": 77,
+    "generic_spam": 63
+   }
+  },
+  "url_exact": {
+   "train&validation": 0,
+   "train&test": 0,
+   "validation&test": 0
+  },
+  "url_registry_hash": {
+   "train&validation": 124,
+   "train&test": 113,
+   "validation&test": 26
+  }
+ }
+}
