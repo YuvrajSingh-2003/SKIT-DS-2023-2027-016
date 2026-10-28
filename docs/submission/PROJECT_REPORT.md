@@ -1,8 +1,9 @@
 # ChainShield — Project Report
 
 Status as of 2026-10-28. Every number below comes from a saved artifact or a recorded
-test run (see TEST_EVIDENCE.md and ML_EVALUATION.md). Nothing here has been verified in a
-browser or against the live Sepolia network.
+test run (see TEST_EVIDENCE.md and ML_EVALUATION.md). Browser and live-Sepolia checks were
+run against an isolated port-8001 test backend (read-only; no transactions), not the live
+port-8000 server.
 
 ## 1. Objectives
 
@@ -96,10 +97,11 @@ pair) appear in two splits after canonicalization. Details: [ML_EVALUATION.md](M
 | Isolated end-to-end API runs | passed |
 | Dashboard and extension in a browser (automated; port-8001 test backend; real toolbar popup in a visible window) | passed (see TEST_EVIDENCE.md) |
 | Manual browser check against the live port-8000 setup | **not yet performed** |
-| Registry hit / "No issues detected" shown in a browser | **not yet performed** (needs RPC) |
+| Genuine Sepolia registry hit and confirmed miss shown in a browser (dashboard and real toolbar popup; port-8001 test backend; read-only) | passed |
 | Dashboard dependencies | Vite 6.4.5; **2 moderate npm advisories remain** (react-router 6; upgrade deferred) |
 | Registry hit / miss / unavailable through the real Web3 stack (local fake Sepolia node) | passed |
-| Live Sepolia read-only lookups | **not yet performed** (no RPC configured) |
+| Live Sepolia read-only lookups (contract, registry hit, miss) | passed (test backend; `threatCount` 7, unchanged) |
+| URL-manifest registry preflight | **not yet performed** (manifest not on the preflight machine) |
 | Running server switched to the new backend | done 2026-10-28 (verified backup; five routes checked) |
 
 ## 9. Future work

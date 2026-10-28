@@ -18,8 +18,9 @@ These are separate kinds of evidence; their counts are not additive.
 | Registry tests against a local **fake** Sepolia node | Hit, non-threat, miss, wrong type, wrong chain, missing code, unreachable: all correct | The live Sepolia contract |
 | Headless browser run (port-8001 test backend) | 35 checks passed | The toolbar popup; registry hit |
 | Visible-browser run (port-8001 test backend, real toolbar popup) | 6 checks passed | The live port-8000 setup; registry hit |
+| Visible-browser run against **live Sepolia** (port-8001 test backend, read-only RPC) | Genuine registry hit (dashboard and real toolbar popup) and confirmed miss: all passed | The live port-8000 setup |
 | Live port-8000 API checks after restart (curl) | Routes, scans and 422s as expected | Browser UI on port 8000 |
-| **Live Sepolia** registry lookups | **Not performed** | — |
+| **Live Sepolia** read-only checks | Contract verified; registry hit and miss confirmed (below) | The URL-manifest preflight (pending) |
 
 ## Automated tests
 
@@ -127,6 +128,56 @@ pointing at port 8001. This run does not verify the live port-8000 environment.
 - Backend down: the dashboard error appears once, with clean punctuation.
 - Backend down: the toolbar popup showed an error, no verdict, and the button re-enabled.
 
+## Live Sepolia registry verification (read-only, 2026-10-28 UTC)
+
+**Contract checks** (view calls; RPC from the gitignored `.env`, never printed):
+- Chain ID 11155111; contract code present at `0x62bFA47Fe851545365b152B746475925100CEc96`.
+- `threatCount` is 7; owner is `0x74faB8279d61BEC35D9e95B72FAE96ee550B07cd`.
+- The synthetic test URL `https://chainshield-test.invalid/registry-check` hashes (with the
+  runtime functions) to `0xa8472757acafcc048ff051b4bd6e8e4b9cb903b39027d4ed8720fc5a2105c65e`.
+  The contract holds that hash with threatType 1 (URL), verdict 1, confidence 100.
+- The examples in `contracts/docs/BLOCKCHAIN_INTEGRATION_SPEC.md` are not registered. Five of its
+  nine example hashes also differ from the runtime hashing, which is an open documentation defect.
+- The other six entries were not identified. The RPC provider's free tier limits `eth_getLogs`
+  to 10 blocks per request, so they could not be enumerated.
+
+**Smishing manifest preflight:** reported by the owner from a run on another machine (Fedora):
+433 of 433 proposed hashes were misses, and the contract reported 7 entries. The preflight output
+was not reviewed here; the 7-entry count was confirmed independently above. The **URL manifest
+preflight is pending**: `proposed_phishing_urls.json` (untracked) was not present on that machine.
+
+**Browser run 3** (visible Brave window, throwaway profile):
+- Setup:
+  - test backend `app.server:app` on port 8001 with a fresh temporary database
+    (`CHAINSHIELD_DATABASE_URL`) and the read-only RPC;
+  - a production dashboard build pointing at 8001;
+  - a scratch extension copy whose only change is the port (8001).
+- For each scan, the actual `POST /scan` response was captured over DevTools and compared
+  with the rendered UI.
+
+| Scenario | API response (captured) | Rendered UI |
+|---|---|---|
+| Dashboard, registry hit | `risk_level` HIGH, `decision_source` blockchain, `blockchain_status` match_threat, `ml_status` not_run, registry available, no error | "✕ High risk"; "This URL's hash was found in the blockchain threat registry."; finding "Blockchain registry identifies this URL as a threat" (matches the response's findings exactly) |
+| Real toolbar popup (one popup view, not a tab), registry hit | Same four fields | "✕ High risk"; "URL hash found in the threat registry."; same finding |
+| Dashboard, `https://www.wikipedia.org` | `blockchain_status` no_match, registry available, no error (a confirmed miss, not an RPC failure); the model then ran: `risk_level` SAFE, `ml_status` ok | "✓ No issues detected"; "Registry checked — this URL's hash was not found. Note: absence from the registry does not guarantee the URL is safe." |
+
+**Test-script correction:** the first dashboard-hit check failed. The script compared each
+finding's rendered text, which includes the "⚠" icon, with the bare text. This was a fault in the
+test harness, not in the application: the badge, registry message and API fields in the same
+check were correct. The check was corrected to compare the finding text, without the icon,
+against the captured response, and a fresh scan in a new tab passed. The screenshot from the
+first scan was kept.
+
+**State after the run:**
+- The live backend (PID 90415, port 8000) kept running, untouched.
+- The live database's checksum (`dfa3dbbf…`), modification time and counts (4 URL scans,
+  2 message scans) were unchanged.
+- `threatCount` was still 7. No transaction was signed or sent, and no key was loaded.
+- All test processes were stopped.
+
+Screenshots: `12-registry-no-match.png`, `13-dashboard-registry-hit.png`,
+`14-extension-registry-hit.png`.
+
 ## Dependency upgrade (dashboard, approved 2026-10-28)
 
 - **Vite** 5.4.21 → **6.4.5**. The declared range in `frontend/dashboard/package.json` changed
@@ -156,9 +207,7 @@ pointing at port 8001. This run does not verify the live port-8000 environment.
 
 | Check | Status | Reason |
 |---|---|---|
-| Registry hit / "No issues detected" in the browser | **NOT PERFORMED** | Needs a configured RPC; the browser run kept RPC unset (covered by the fake-node API tests) |
 | Clicking the toolbar icon by hand | **NOT PERFORMED** | The real toolbar popup was opened with `chrome.action.openPopup()` in a visible Brave window and driven over DevTools; a physical click was not automated |
-| Live Sepolia read-only lookup and preflight | **NOT PERFORMED** | No `SEPOLIA_RPC_URL` on this machine |
+| URL-manifest registry preflight (`proposed_phishing_urls.json`) | **NOT PERFORMED** | The manifest is untracked and was not on the machine where the smishing preflight ran |
 | npm advisories | 2 open (moderate, react-router 6) | Fixing them needs react-router-dom 7 (major); deferred |
-| Screenshot item 12 (registry `no_match`) | **NOT CAPTURED** | Needs a configured RPC |
 | Browser UI against the live port-8000 backend | **NOT PERFORMED** | Browser runs used the port-8001 test backend so no test scans reached the live database |

@@ -16,7 +16,7 @@ evidence, report, screenshot checklist) is in [submission/](submission/).
 | Message history (metadata only) | Implemented and tested (local) | In-memory SQLite tests; isolated end-to-end run |
 | URL scanning `POST /scan`, `GET /scan/history` | Implemented and tested | Original fields unchanged; added `blockchain_status`, `ml_status`; advisory model policy (see below) |
 | URL ML model | Implemented, advisory only; **not reliable** | Pinned SHA-256 checked before loading; can raise risk to MEDIUM, never HIGH (template artifact, see datasets.md) |
-| Blockchain lookups (URL and message, read-only) | Implemented; tested through the real Web3 stack against a local fake Sepolia node (hit, non-threat, miss, wrong type, wrong chain, missing code, unreachable); **not verified against live Sepolia** | `tests/test_registry_rpc_e2e.py`; no RPC configured in this environment |
+| Blockchain lookups (URL and message, read-only) | Implemented; tested through the real Web3 stack against a local fake Sepolia node (hit, non-threat, miss, wrong type, wrong chain, missing code, unreachable); verified read-only against live Sepolia on the port-8001 test backend (URL hit and miss); the live port-8000 server has no RPC configured | `tests/test_registry_rpc_e2e.py`; no RPC configured in this environment |
 | Hashing/canonicalization (Keccak-256) | Implemented and tested | Existing hashing tests |
 | Chrome extension (URL + message modes) | Implemented; logic unit-tested; passed automated browser runs (Brave/Chromium 156), including the real toolbar popup, against the port-8001 test backend; **no manual check against port 8000** | Node tests (`frontend/extension/tests/`); `docs/submission/TEST_EVIDENCE.md` |
 | Dashboard (URL, Message, History pages) | Implemented; production build passes on Vite 6.4.5; helpers unit-tested; passed automated browser runs against the port-8001 test backend; **no manual check against port 8000** | `vite build`; `frontend/dashboard/tests/`, `frontend/shared/tests/` |
@@ -141,7 +141,11 @@ new model. A defensible next model needs:
   deployed code first, and verifies the stored threat type (URL=1, MESSAGE=0).
 - Statuses: `match_threat`, `match_non_threat`, `no_match`, `unavailable`.
 - Nothing is ever written. Nothing is seeded automatically.
-- **Live verification is pending**: set `SEPOLIA_RPC_URL` in `.env` and run a scan.
+- **Live Sepolia (read-only), verified 2026-10-28** on the port-8001 test backend:
+  - the synthetic test URL `https://chainshield-test.invalid/registry-check` is registered (URL,
+    verdict 1) and gives a registry hit in the dashboard and the real toolbar popup;
+  - `https://www.wikipedia.org` gives a confirmed `no_match`.
+  The live port-8000 server has no RPC configured. Details: `submission/TEST_EVIDENCE.md`.
 - When the registry cannot be checked, a registered threat is not recognised: the result
   falls back to heuristics and the model (e.g. a registered URL becomes MEDIUM, a
   registered message LOW). A URL is never `SAFE` while the registry is unavailable.

@@ -1,17 +1,17 @@
 # ChainShield — Screenshot Checklist
 
-All screenshots are real captures of the application, taken on 2026-10-28 in
-`docs/submission/screenshots/`. No screenshot was edited.
+All screenshots are real captures of the application, taken on 2026-10-28 (UTC; run 3 at
+19:16 UTC), in `docs/submission/screenshots/`. No screenshot was edited.
 
 **Test configuration** (not the live port-8000 setup):
-- Every screenshot used a separate `app.server:app` test backend on **port 8001**, with a fresh
-  temporary SQLite database and **no RPC configured**. The live backend and database were not
-  used.
+- Every screenshot used a separate `app.server:app` test backend on **port 8001** with a fresh
+  temporary SQLite database. The live backend and database were not used.
+- Runs 1 and 2 had **no RPC configured**. Run 3 (items 12–14) used a read-only Sepolia RPC.
 - The dashboard was a production build served by `vite preview`.
 - The extension was a test copy of `frontend/extension/` whose only change was the backend port
   (8001). Screenshots that show an error hint therefore display `127.0.0.1:8001`.
-- Because no RPC was configured, every result shows the threat registry as unavailable. That is
-  an inconclusive state, never evidence that a URL or message is safe.
+- In runs 1 and 2 every result therefore shows the threat registry as unavailable. That is an
+  inconclusive state, never evidence that a URL or message is safe.
 
 **Two capture runs:**
 - **Run 1, headless:** Brave Origin 156 (Chromium 156), driven over the DevTools protocol, Vite
@@ -19,6 +19,9 @@ All screenshots are real captures of the application, taken on 2026-10-28 in
   (same files and extension origin, but not the toolbar popup).
 - **Run 2, visible window:** Brave Origin 156, Vite 6.4.5 build. The real toolbar popup was
   opened with `chrome.action.openPopup()`, and Chrome reported it as a popup view.
+- **Run 3, visible window, live Sepolia (read-only):** the same setup as run 2, with the test
+  backend reading a Sepolia RPC from the gitignored `.env`. The browser's actual `POST /scan`
+  response was captured over DevTools and compared with the rendered UI.
 
 ## Evidence index
 
@@ -39,7 +42,12 @@ All screenshots are real captures of the application, taken on 2026-10-28 in
 | `11-extension-error.png` | Backend stopped → "Cannot reach the ChainShield backend. No result is available." | Extension `popup.html` as a tab, run 1 | Shows `127.0.0.1:8001`. Not the toolbar popup | `719c51de6b33decb` |
 | `11-extension-error-v2.png` | Same error in the **real toolbar popup**; no verdict shown | Extension toolbar popup, run 2 | Shows `127.0.0.1:8001` | `62fb8e1082599376` |
 
-For items 8, 9 and 11, prefer the run-2 files (`-v2` / `-toolbar-popup`).
+| `12-registry-no-match.png` | `https://www.wikipedia.org` → confirmed registry miss (`no_match`, registry available, no error); the model then ran → "✓ No issues detected"; registry box "Registry checked — this URL's hash was not found. Note: absence from the registry does not guarantee the URL is safe." | Dashboard, run 3 (live Sepolia, read-only) | None noted | `d52fdb6a9377d745` |
+| `13-dashboard-registry-hit.png` | `https://chainshield-test.invalid/registry-check` → **genuine Sepolia registry hit**: "✕ High risk"; "This URL's hash was found in the blockchain threat registry."; finding "Blockchain registry identifies this URL as a threat" | Dashboard, run 3 | None noted | `1961d0c63d0ffc6b` |
+| `14-extension-registry-hit.png` | Same genuine hit in the **real toolbar popup**: "✕ High risk", "URL hash found in the threat registry.", same finding | Extension toolbar popup, run 3 | The URL input is scrolled, so it reads "…eld-test.invalid/registry-check"; the result line shows the full domain | `4347f09e116a132c` |
+
+For items 8, 9 and 11, prefer the run-2 files (`-v2` / `-toolbar-popup`). The registry-hit
+input is the project's synthetic test record (a `.invalid` domain); the browser never visits it.
 
 **Note A.** The Overview page's descriptive text predates the current design. It describes risk
 levels as "Safe · Medium · High" calculated from a count of findings, and it does not mention the
@@ -53,9 +61,10 @@ width. This is a display issue in the dashboard; it is open.
 
 | # | File | Needs | Status |
 |---|---|---|---|
-| 12 | `12-registry-no-match.png` | A configured Sepolia RPC: a URL scan showing registry `no_match` | **Not captured** |
-| — | Registry hit, and "✓ No issues detected" in a browser | A configured RPC and a registered test record | **Not captured; not verified in a browser** |
 | — | Toolbar popup opened by a manual click on the icon | A person at the browser | **Not performed** |
+| — | Any browser check against the live port-8000 backend | A person, with test scans accepted in the live history | **Not performed** |
+
+Completed in run 3: item 12 (`12-registry-no-match.png`) and the registry hit (13, 14).
 
 None of the screenshots above shows the live port-8000 environment.
 

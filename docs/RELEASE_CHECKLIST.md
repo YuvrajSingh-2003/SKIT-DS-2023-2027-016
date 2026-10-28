@@ -2,9 +2,11 @@
 
 Status on 2026-10-28: automated tests and isolated end-to-end runs pass. The dashboard and
 extension passed automated browser runs, including the real toolbar popup in a visible
-window, against the port-8001 test backend (`docs/submission/TEST_EVIDENCE.md`). **Not yet
-done:** the manual browser checks below against the live port-8000 setup, and live blockchain
-checks. ChainShield is not production-ready; see "Open issues".
+window, against the port-8001 test backend (`docs/submission/TEST_EVIDENCE.md`). A genuine
+Sepolia registry hit and a confirmed miss were verified (read-only) in the dashboard and the real
+toolbar popup against that test backend. **Not yet done:** the manual checks below against the
+live port-8000 setup, and the URL-manifest registry preflight. ChainShield is not
+production-ready; see "Open issues".
 
 Use synthetic messages only. Never paste real personal messages into test runs.
 
@@ -42,6 +44,15 @@ Use synthetic messages only. Never paste real personal messages into test runs.
 - [ ] The server log contains no message text.
 
 ## 4. Live read-only blockchain lookups
+
+Verified on 2026-10-28 against the **port-8001 test backend**, not the live server:
+- URL hit: `match_threat`, HIGH, decided by the blockchain.
+- URL miss: `no_match`, registry available.
+- No transaction was sent; `threatCount` stayed 7.
+
+Details: TEST_EVIDENCE.md. The boxes stay open for the live port-8000 server, which has no RPC
+configured and was not restarted. The message lookup and the wrong-chain case were tested only
+against the local fake node.
 
 - [ ] Put `SEPOLIA_RPC_URL=<your Sepolia RPC URL>` in `.env` (do not share it), then restart the server.
 - [ ] Scan a URL → `blockchain_available: true` and `blockchain_status` is `no_match` (or a match).
@@ -90,9 +101,11 @@ see TEST_EVIDENCE.md. The boxes stay open for the manual check against port 8000
 2. SMS model external recall is 0.70 on IMC 2025 and 0 on "hey mum/dad" scams.
 3. Resolved 2026-10-28: seeder registers only smishing for messages (above).
 4. Resolved 2026-10-28: `blockchain_status` is stored in URL history (additive column, applied at restart).
-5. Manual browser checks against port 8000 and live blockchain checks are not yet done.
-   Automated browser runs against the port-8001 test backend passed. Registry behaviour is
-   tested against a local fake Sepolia node (`tests/test_registry_rpc_e2e.py`), not live.
+5. Manual browser checks against port 8000 are not yet done. Automated browser runs against the
+   port-8001 test backend passed, including a genuine Sepolia registry hit and a confirmed miss
+   (read-only). Registry edge cases (wrong chain, missing code, unreachable node, wrong threat
+   type) are tested only against a local fake node (`tests/test_registry_rpc_e2e.py`). The
+   URL-manifest registry preflight is pending.
 6. Dashboard display issues seen in screenshots (open): the Overview page text is outdated,
    and long risk badges are cut off in the URL history table
    (`docs/submission/SCREENSHOT_CHECKLIST.md`, notes A and B).
@@ -115,4 +128,4 @@ Use only these synthetic inputs. Expected results assume the backend runs `app.s
 | 7 | Any | Stop the backend, then scan | "Cannot reach the ChainShield backend … No result is available." No verdict shown | Same |
 | 8 | Dashboard `/history` | Open; expand a row | Rows newest first; registry status per row; older rows "not recorded" or "unavailable" | Same |
 | 9 | Dashboard `/messages` | Scroll to history | Verdict, risk, score, registry and length only; **no message text** | Same |
-| 10 | Registry hit (only with a registered test record) | `https://chainshield-test.invalid/registry-check`, if registered | n/a | `✕ High risk`, "found in the blockchain threat registry", model not run |
+| 10 | Registry hit (registered test record, confirmed read-only on Sepolia) | `https://chainshield-test.invalid/registry-check` | n/a | `✕ High risk`, "This URL's hash was found in the blockchain threat registry.", model not run (verified on the port-8001 test backend) |
