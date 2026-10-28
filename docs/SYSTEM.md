@@ -16,12 +16,12 @@ evidence, report, screenshot checklist) is in [submission/](submission/).
 | Message history (metadata only) | Implemented and tested (local) | In-memory SQLite tests; isolated end-to-end run |
 | URL scanning `POST /scan`, `GET /scan/history` | Implemented and tested | Original fields unchanged; added `blockchain_status`, `ml_status`; advisory model policy (see below) |
 | URL ML model | Implemented, advisory only; **not reliable** | Pinned SHA-256 checked before loading; can raise risk to MEDIUM, never HIGH (template artifact, see datasets.md) |
-| Blockchain lookups (URL and message, read-only) | Implemented, mocked tests; **not live-verified** | No RPC configured in this environment |
+| Blockchain lookups (URL and message, read-only) | Implemented; tested through the real Web3 stack against a local fake Sepolia node (hit, non-threat, miss, wrong type, wrong chain, missing code, unreachable); **not verified against live Sepolia** | `tests/test_registry_rpc_e2e.py`; no RPC configured in this environment |
 | Hashing/canonicalization (Keccak-256) | Implemented and tested | Existing hashing tests |
-| Chrome extension (URL + message modes) | Implemented, logic unit-tested; **not tested in Chrome** | Node tests, syntax checks |
-| Dashboard Message Scanner page | Implemented; production build passes; **not browser-tested** | `vite build` |
+| Chrome extension (URL + message modes) | Implemented; logic unit-tested; passed automated browser runs (Brave/Chromium 156), including the real toolbar popup, against the port-8001 test backend; **no manual check against port 8000** | Node tests (`frontend/extension/tests/`); `docs/submission/TEST_EVIDENCE.md` |
+| Dashboard (URL, Message, History pages) | Implemented; production build passes on Vite 6.4.5; helpers unit-tested; passed automated browser runs against the port-8001 test backend; **no manual check against port 8000** | `vite build`; `frontend/dashboard/tests/`, `frontend/shared/tests/` |
 | Training/data pipeline guards | Implemented and tested | 349 Python tests (Stage 0–2) |
-| Running server on port 8000 | Serves the **old** app (`main:app`) | Not restarted; needs a manual restart to expose `/message/*` |
+| Running server on port 8000 | Serves `app.server:app` (all five routes) since 2026-10-28 | Restarted with owner approval after a verified database backup; routes and scans checked |
 | Seeder label policy | Implemented and unit-tested (not run against a chain) | Smishing-only; generic spam never registered; unrecognized labels reported |
 
 ## Architecture
@@ -142,6 +142,18 @@ new model. A defensible next model needs:
 - Statuses: `match_threat`, `match_non_threat`, `no_match`, `unavailable`.
 - Nothing is ever written. Nothing is seeded automatically.
 - **Live verification is pending**: set `SEPOLIA_RPC_URL` in `.env` and run a scan.
+- When the registry cannot be checked, a registered threat is not recognised: the result
+  falls back to heuristics and the model (e.g. a registered URL becomes MEDIUM, a
+  registered message LOW). A URL is never `SAFE` while the registry is unavailable.
+
+### Registry batch preparation (read-only; no writes)
+- `python -m src.blockchain.prepare_batch --urls-only|--messages-only --out <new file>` hashes
+  eligible records with the runtime hash functions and writes a hash-only manifest
+  (provenance, exclusions, source checksums). Locked-test-split messages, duplicates,
+  synthetic test records and unlicensed feeds are excluded.
+- `python -m src.blockchain.registry_preflight --manifest <file> --out <new file>` checks each
+  hash with view calls and gets `eth_estimateGas` from the owner address. It holds no key and
+  sends nothing. Reviewed manifests and the approval gate: `data/threat_registry/REVIEW.md`.
 
 ### Seeder (policy updated 2026-10-28; never run against a chain here)
 `src/blockchain/seed_registry.py` is dry-run by default and writes only with `--submit`.
@@ -164,6 +176,7 @@ new model. A defensible next model needs:
 | `SEPOLIA_RPC_URL` (or `WEB3_PROVIDER_URI`) | `app/services/blockchain_checker.py` | Read-only registry lookups; unset → `unavailable` |
 | `SIGNER_PRIVATE_KEY` | deploy/seed scripts only | Never needed by the API |
 | `CHAINSHIELD_CORS_ORIGINS` | `main.py` | Comma-separated dashboard origins (default Vite dev origins) |
+| `CHAINSHIELD_DATABASE_URL` | `app/database/database.py` | SQLAlchemy URL; default `sqlite:///<repository root>/chainshield.db`. Set it for isolated test databases |
 | `VITE_API_BASE_URL` | dashboard | Backend URL (default `http://127.0.0.1:8000`) |
 
 The extension's backend URL is `BACKEND_URL` in `frontend/extension/src/popup.js` and must
@@ -185,24 +198,32 @@ match `host_permissions` in `manifest.json`.
 # Dashboard
 cd frontend/dashboard && npm ci && npm run dev        # http://localhost:5173
 ```
-The currently running server (started in this session as
-`.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000`, working directory = repository
-root) serves the old code: no `/message/*`, no URL checksum pin, no advisory policy.
-Safe restart: (1) copy `chainshield.db` to a backup; (2) stop the old process
-(Ctrl+C in its terminal, or `kill <pid>` after checking `ss -ltnp | grep :8000`);
-(3) from the repository root run `.venv/bin/uvicorn app.server:app --host 127.0.0.1 --port 8000`;
-(4) check `curl -s http://127.0.0.1:8000/` and one scan of each kind. Starting
-`app.server` creates the `message_scans` table in `chainshield.db` if missing (additive;
-no existing table changes; back up the file first if it matters).
+Run `app.server:app`, not `main:app` (which has no `/message/*` routes).
+
+**Database.** `chainshield.db` in the repository root, independent of the working directory
+(override with `CHAINSHIELD_DATABASE_URL`). Schema setup (adding missing tables and
+columns) runs at server startup only; importing the code never touches the database.
+
+**Safe backup** (consistent even while the server runs):
+```bash
+sqlite3 chainshield.db ".backup '<backup dir>/chainshield-$(date -u +%Y%m%dT%H%M%SZ).db'"
+sqlite3 '<backup file>' "PRAGMA integrity_check"      # must print: ok
+sha256sum '<backup file>'                              # record the checksum
+```
+**Safe restart:** back up as above; stop the old process (check `ss -ltnp | grep :8000`
+first); start the command above from the repository root; check `curl -s
+http://127.0.0.1:8000/openapi.json` lists five routes and run one scan of each kind.
 
 ### Chrome extension
 1. Open `chrome://extensions`, enable Developer mode.
 2. Load unpacked → `frontend/extension/`.
 3. Open the popup, choose URL or Message, paste, press Scan.
-Manual checks (not yet performed; no browser was available to this work):
+Manual checks against port 8000 (not yet performed; the same scenarios passed in automated
+browser runs against the port-8001 test backend, see `submission/TEST_EVIDENCE.md`; full list
+in `RELEASE_CHECKLIST.md` §7):
 1. URL mode: `https://example.com` → a result with a registry line; `not a url` → validation message.
 2. Message mode: a harmless synthetic message → "Likely legitimate (model)" with scores.
-3. Message mode: a synthetic "account suspended, verify at http://…" message → "Likely smishing".
+3. Message mode: a synthetic "account suspended, verify at http://…" message → "! Likely smishing" (amber, MEDIUM).
 4. Stop the backend and scan → an error ("Cannot reach…"), never a result; the spinner stops.
 5. Paste more than 2,000 characters → blocked before sending.
 Permissions: none, plus host `http://127.0.0.1:8000/*` only (unchanged).
@@ -217,23 +238,23 @@ cases as above, plus that message history shows no message text.
 - Message text is used only in memory for one request. It is not logged, stored, or
   returned. Only its Keccak-256 hash is used, in a read-only registry query.
 - Message history stores verdict, scores, registry status, length and a has-link flag.
-- URL scans keep the existing behavior (the URL is stored in `scans`).
+- URL scans keep the existing behavior: the full URL, including any query string, is stored
+  in `scans` indefinitely and returned by `GET /scan/history` without authentication. The
+  API is meant for local use (bound to 127.0.0.1); do not expose it on a network as is.
 - The extension sends data only when the user presses Scan.
 
 ## Tests
 
 ```bash
 export PYTHONDONTWRITEBYTECODE=1
-.venv/bin/python -m pytest -q -p no:cacheprovider tests/test_message_scan.py tests/test_sms_baseline.py \
-  tests/test_group_split.py tests/test_training_guard.py tests/test_prepare_sources.py \
-  tests/test_dedupe_and_merge.py tests/test_data_integrity.py tests/test_data_validation.py \
-  tests/test_label_handling.py tests/test_load_data.py tests/test_blockchain_scan_integration.py \
-  tests/test_url_inference.py tests/test_hashing.py tests/test_canonicalization.py
-.venv/bin/python -m pytest -q -p no:cacheprovider tests/test_features.py -k "not TestPreprocessText"
-node --test frontend/extension/tests/
+.venv/bin/python -m pytest -q -p no:cacheprovider -k "not TestPreprocessText"
+node --test frontend/extension/tests/ frontend/shared/tests/ frontend/dashboard/tests/
 cd frontend/dashboard && npx vite build
+.venv/bin/python -m src.evaluation.verify_production_models --out <new file>.json   # model check
 ```
-`TestPreprocessText` is excluded because it downloads NLTK corpora.
+`TestPreprocessText` is excluded because it downloads NLTK corpora. Tests use in-memory or
+temporary databases and a local fake RPC; none touches `chainshield.db` or a real network.
+Latest results: `docs/submission/TEST_EVIDENCE.md`.
 
 ## Troubleshooting
 
@@ -242,16 +263,21 @@ cd frontend/dashboard && npx vite build
 | `verdict: unavailable`, model error "artifact not found" / "pinned checksum" | Model file missing or altered; restore the run directory |
 | `registry.status: unavailable` | No RPC configured, network unreachable, wrong chain, or contract missing |
 | 404 on `/message/scan` | Server was started as `main:app`; start `app.server:app` |
+| Empty history after a restart | Pre-2026-10-28 code used `./chainshield.db` relative to the working directory; the database is now always the one in the repository root |
 | Extension shows "Cannot reach the backend" | Server not running on 127.0.0.1:8000 |
 
 ## Remaining manual steps and decisions
 
-1. Restart the backend as `app.server:app` (creates `message_scans`; back up `chainshield.db` first).
+1. ~~Restart the backend as `app.server:app`~~ (done 2026-10-28 after a verified backup).
 2. Configure `SEPOLIA_RPC_URL` and confirm read-only registry lookups live.
 3. Load the extension in Chrome and run the manual checks above; open the dashboard Message Scanner.
 4. Decide the seeder policy for `spam` (see Blockchain → Seeder); use `--threat-label smishing` meanwhile.
 5. Improve the SMS model with more recent, licensed smishing data before any production use.
-6. Approve the additive `scans.blockchain_status` column, which is added when the server restarts (see RELEASE_CHECKLIST.md §1).
+6. ~~Approve the additive `scans.blockchain_status` column~~ (kept; present in the live database).
+7. npm advisories (dashboard): 2 open (moderate). Vite was upgraded to 6.4.5 (esbuild
+   0.25.12) on 2026-10-28 with owner approval, which fixed the vite and esbuild advisories.
+   - react-router 6.30.6: open redirect via user-controlled link targets (all targets here are
+     fixed paths) and SSR hydration (not used). There is no 6.x fix; deferred.
 
 ## Frozen-file changes (authorized 2026-10-28)
 | File | Change | Reason |

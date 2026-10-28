@@ -297,6 +297,15 @@ Produced by `src/data/split_prepared.py` from the 5,762 prepared Mishra & Soni r
 3. Done (Stage 1.3): IMC mapping documented; IMC is evaluation-only.
 4. Done (Stage 1.4): the 19 cross-label near-duplicate pairs (37 rows) are excluded.
 5. SmishTank and vinit9638 are excluded (terms unverified / no license).
-6. Resolve the seeder conflict: `src/blockchain/seed_registry.py` and
-   `contracts/docs/BLOCKCHAIN_INTEGRATION_SPEC.md` treat `spam` as a confirmed threat,
-   which disagrees with the canonical labels above.
+6. Done 2026-10-28: the seeder registers only `smishing` for messages; `spam` is counted
+   as generic spam and never registered (docs/SYSTEM.md, Blockchain → Seeder).
+7. Open (found 2026-10-28): the PhiUSIIL stratified URL splits contain URLs that differ only
+   in case, default port or trailing slash. After canonicalization (`canonicalize_url`), 124
+   URLs are shared by train and validation, 113 by train and test, and 26 by validation and
+   test. There are no exact-string duplicates. A future re-split should group by canonical
+   hash. Measured with `src/evaluation/verify_production_models.py`; see
+   docs/submission/ML_EVALUATION.md.
+8. Registry proposals use only the Mishra & Soni train and validation smishing rows (never the
+   locked test split) and PhiUSIIL label-0 URLs. They contain hashes and provenance only. The
+   PhiUSIIL labels are historical (2024) and do not show that a URL is malicious today
+   (data/threat_registry/REVIEW.md).
