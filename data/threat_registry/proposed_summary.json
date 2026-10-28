@@ -1,0 +1,39 @@
+{
+ "generated_at": "2026-10-28T17:15:24.606997+00:00",
+ "network": {
+  "chain_id": 11155111,
+  "contract_address": "0x62bFA47Fe851545365b152B746475925100CEc96"
+ },
+ "purpose": "Combined summary of the two reviewable proposals. Nothing has been submitted on-chain.",
+ "contract_function": "submitThreat(bytes32 threatHash, uint8 threatType, uint8 verdict, uint16 confidence), onlyOwner, one hash per transaction",
+ "batches": {
+  "smishing": {
+   "file": "proposed_smishing.json",
+   "sha256": "829f59551a4fe0bf02843aa57a345f72c45fdb4aad3caeb85870217220c4a6ae",
+   "threatType": 0,
+   "candidates": 510,
+   "proposed_total": 433,
+   "excluded_by_reason": {
+    "in_locked_test_split": 77
+   },
+   "synthetic": 0,
+   "registry_status_unknown": 510
+  },
+  "phishing_urls": {
+   "file": "proposed_phishing_urls.json",
+   "sha256": "70c8c564e6bb1487151a17ebd97dbd4d9782dc551998161cbe115936505325c8",
+   "threatType": 1,
+   "candidates": 100946,
+   "proposed_total": 250,
+   "deferred_url_eligible": 99703,
+   "excluded_by_reason": {
+    "duplicate_hash": 992
+   },
+   "synthetic": 1,
+   "registry_status_unknown": 100946
+  }
+ },
+ "total_writes_if_all_approved": 683,
+ "registry_check": "not performed: no RPC on the preparing machine; membership unknown for every hash",
+ "gas": "not estimated: requires eth_estimateGas from the owner address against Sepolia"
+}
