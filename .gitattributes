@@ -1,0 +1,5 @@
+# Hash-pinned artifacts must stay byte-identical on every platform (no line-ending conversion).
+data/threat_registry/*.json -text
+data/threat_registry/*.jsonl -text
+models/**/*.json -text
+models/**/*.sha256 -text

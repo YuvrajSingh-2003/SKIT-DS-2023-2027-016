@@ -1,0 +1,282 @@
+[
+ {
+  "candidate": {
+   "name": "word12_C1",
+   "analyzer": "word",
+   "ngram_range": [
+    1,
+    2
+   ],
+   "C": 1.0
+  },
+  "validation": {
+   "per_class": {
+    "legitimate": {
+     "precision": 0.9889958734525447,
+     "recall": 0.9917241379310345,
+     "f1": 0.990358126721763,
+     "support": 725
+    },
+    "generic_spam": {
+     "precision": 0.7611940298507462,
+     "recall": 0.8095238095238095,
+     "f1": 0.7846153846153846,
+     "support": 63
+    },
+    "smishing": {
+     "precision": 0.9295774647887324,
+     "recall": 0.8571428571428571,
+     "f1": 0.8918918918918919,
+     "support": 77
+    }
+   },
+   "macro_f1": 0.8889551344096799,
+   "weighted_f1": 0.9666081928089283,
+   "confusion_matrix": {
+    "labels": [
+     "legitimate",
+     "generic_spam",
+     "smishing"
+    ],
+    "rows_true_cols_pred": [
+     [
+      719,
+      5,
+      1
+     ],
+     [
+      8,
+      51,
+      4
+     ],
+     [
+      0,
+      11,
+      66
+     ]
+    ]
+   },
+   "undefined_precision": [],
+   "generic_spam_predicted_smishing": {
+    "count": 4,
+    "of": 63,
+    "rate": 0.06349206349206349
+   },
+   "legitimate_predicted_smishing": {
+    "count": 1,
+    "of": 725,
+    "rate": 0.001379310344827586
+   }
+  }
+ },
+ {
+  "candidate": {
+   "name": "word12_C10",
+   "analyzer": "word",
+   "ngram_range": [
+    1,
+    2
+   ],
+   "C": 10.0
+  },
+  "validation": {
+   "per_class": {
+    "legitimate": {
+     "precision": 0.9863387978142076,
+     "recall": 0.9958620689655172,
+     "f1": 0.9910775566231984,
+     "support": 725
+    },
+    "generic_spam": {
+     "precision": 0.8166666666666667,
+     "recall": 0.7777777777777778,
+     "f1": 0.7967479674796748,
+     "support": 63
+    },
+    "smishing": {
+     "precision": 0.9315068493150684,
+     "recall": 0.8831168831168831,
+     "f1": 0.9066666666666666,
+     "support": 77
+    }
+   },
+   "macro_f1": 0.8981640635898467,
+   "weighted_f1": 0.9694100391171928,
+   "confusion_matrix": {
+    "labels": [
+     "legitimate",
+     "generic_spam",
+     "smishing"
+    ],
+    "rows_true_cols_pred": [
+     [
+      722,
+      2,
+      1
+     ],
+     [
+      10,
+      49,
+      4
+     ],
+     [
+      0,
+      9,
+      68
+     ]
+    ]
+   },
+   "undefined_precision": [],
+   "generic_spam_predicted_smishing": {
+    "count": 4,
+    "of": 63,
+    "rate": 0.06349206349206349
+   },
+   "legitimate_predicted_smishing": {
+    "count": 1,
+    "of": 725,
+    "rate": 0.001379310344827586
+   }
+  }
+ },
+ {
+  "candidate": {
+   "name": "char25_C1",
+   "analyzer": "char_wb",
+   "ngram_range": [
+    2,
+    5
+   ],
+   "C": 1.0
+  },
+  "validation": {
+   "per_class": {
+    "legitimate": {
+     "precision": 0.9904109589041096,
+     "recall": 0.9972413793103448,
+     "f1": 0.9938144329896907,
+     "support": 725
+    },
+    "generic_spam": {
+     "precision": 0.8688524590163934,
+     "recall": 0.8412698412698413,
+     "f1": 0.8548387096774194,
+     "support": 63
+    },
+    "smishing": {
+     "precision": 0.9324324324324325,
+     "recall": 0.8961038961038961,
+     "f1": 0.9139072847682119,
+     "support": 77
+    }
+   },
+   "macro_f1": 0.9208534758117741,
+   "weighted_f1": 0.9765793798316249,
+   "confusion_matrix": {
+    "labels": [
+     "legitimate",
+     "generic_spam",
+     "smishing"
+    ],
+    "rows_true_cols_pred": [
+     [
+      723,
+      2,
+      0
+     ],
+     [
+      5,
+      53,
+      5
+     ],
+     [
+      2,
+      6,
+      69
+     ]
+    ]
+   },
+   "undefined_precision": [],
+   "generic_spam_predicted_smishing": {
+    "count": 5,
+    "of": 63,
+    "rate": 0.07936507936507936
+   },
+   "legitimate_predicted_smishing": {
+    "count": 0,
+    "of": 725,
+    "rate": 0.0
+   }
+  }
+ },
+ {
+  "candidate": {
+   "name": "char25_C10",
+   "analyzer": "char_wb",
+   "ngram_range": [
+    2,
+    5
+   ],
+   "C": 10.0
+  },
+  "validation": {
+   "per_class": {
+    "legitimate": {
+     "precision": 0.9877049180327869,
+     "recall": 0.9972413793103448,
+     "f1": 0.9924502402196294,
+     "support": 725
+    },
+    "generic_spam": {
+     "precision": 0.8688524590163934,
+     "recall": 0.8412698412698413,
+     "f1": 0.8548387096774194,
+     "support": 63
+    },
+    "smishing": {
+     "precision": 0.9583333333333334,
+     "recall": 0.8961038961038961,
+     "f1": 0.9261744966442953,
+     "support": 77
+    }
+   },
+   "macro_f1": 0.9244878155137813,
+   "weighted_f1": 0.9765279758503116,
+   "confusion_matrix": {
+    "labels": [
+     "legitimate",
+     "generic_spam",
+     "smishing"
+    ],
+    "rows_true_cols_pred": [
+     [
+      723,
+      2,
+      0
+     ],
+     [
+      7,
+      53,
+      3
+     ],
+     [
+      2,
+      6,
+      69
+     ]
+    ]
+   },
+   "undefined_precision": [],
+   "generic_spam_predicted_smishing": {
+    "count": 3,
+    "of": 63,
+    "rate": 0.047619047619047616
+   },
+   "legitimate_predicted_smishing": {
+    "count": 0,
+    "of": 725,
+    "rate": 0.0
+   }
+  }
+ }
+]

@@ -158,6 +158,14 @@ new model. A defensible next model needs:
 - `python -m src.blockchain.registry_preflight --manifest <file> --out <new file>` checks each
   hash with view calls and gets `eth_estimateGas` from the owner address. It holds no key and
   sends nothing. Reviewed manifests and the approval gate: `data/threat_registry/REVIEW.md`.
+- `python -m src.blockchain.submit_reviewed_batch --manifest <final artifact> --log <new .jsonl>`
+  submits **only** the owner-approved final smishing artifact.
+  - It pins the artifact's SHA-256, its 421-entry count, the chain, the contract and the owner.
+  - It re-derives every hash and rechecks `threatExists` before each write.
+  - It stops at the first failed or uncertain transaction and logs to JSONL.
+  - Without `--submit` it runs read-only and loads no key.
+  - With `--submit` it needs `SIGNER_PRIVATE_KEY` (environment or `.env`, never on the command
+    line) and a typed confirmation.
 
 ### Seeder (policy updated 2026-10-28; never run against a chain here)
 `src/blockchain/seed_registry.py` is dry-run by default and writes only with `--submit`.
@@ -262,11 +270,12 @@ Latest results: `docs/submission/TEST_EVIDENCE.md`.
 
 ### Local model prerequisites (fresh checkout)
 
-The model artifacts under `models/` are not in Git: the `model.joblib` files are gitignored,
-and the rest of `models/` is untracked. In a fresh checkout, some model tests therefore cannot
-use the real models.
+The model binaries (`model.joblib`) are gitignored. The run metadata under `models/` (configs,
+`selection_frozen.json`, evaluations, checksums) is in Git since 2026-10-29. In a fresh
+checkout the real-model test therefore cannot run until the binaries are copied in.
 
-**SMS model tests fail (they do not skip) when the files are missing:**
+**SMS model tests fail (they do not skip) when the files are missing.** With the committed
+metadata, only the first test below still fails in a fresh checkout (it needs `model.joblib`):
 - `tests/test_message_scan.py::TestSmsDetector::test_real_model_returns_known_class_and_probabilities`
   needs `models/sms_baseline/run-20261028T122841Z-seed42/model.joblib` and
   `models/sms_baseline/run-20261028T122841Z-seed42/selection_frozen.json`.

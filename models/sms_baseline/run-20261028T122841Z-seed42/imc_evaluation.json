@@ -1,0 +1,114 @@
+{
+ "interpretation": "Agreement with GPT-4o-assigned IMC labels on English user-reported texts; not verified real-world performance. No legitimate class: precision, specificity and false-positive rate cannot be estimated from IMC.",
+ "imc_sha256": "1bbd1e9e82c3ea023112207b80da268a5c4a07d2353c2b0898360ab037fa9a64",
+ "accounting": {
+  "rows_read": 33869,
+  "status_counts": {
+   "excluded_label_conflict": 21,
+   "excluded_missing_category": 1,
+   "excluded_non_english": 11791,
+   "excluded_unresolved": 4890,
+   "included_smishing": 10480,
+   "removed_duplicate": 5498,
+   "separate_generic_spam": 1188
+  },
+  "counts_by_source_category": {
+   "<missing>": {
+    "excluded_missing_category": 1,
+    "excluded_non_english": 80
+   },
+   "banking": {
+    "excluded_non_english": 4782,
+    "included_smishing": 6445,
+    "removed_duplicate": 4050
+   },
+   "delivery": {
+    "excluded_label_conflict": 6,
+    "excluded_non_english": 2134,
+    "included_smishing": 1241,
+    "removed_duplicate": 429
+   },
+   "government": {
+    "excluded_non_english": 1326,
+    "included_smishing": 1341,
+    "removed_duplicate": 581
+   },
+   "hey mum/dad": {
+    "excluded_non_english": 186,
+    "included_smishing": 55,
+    "removed_duplicate": 22
+   },
+   "others": {
+    "excluded_non_english": 2336,
+    "excluded_unresolved": 4586
+   },
+   "spam": {
+    "excluded_label_conflict": 11,
+    "excluded_non_english": 323,
+    "removed_duplicate": 188,
+    "separate_generic_spam": 1188
+   },
+   "telecom": {
+    "excluded_label_conflict": 4,
+    "excluded_non_english": 596,
+    "included_smishing": 1398,
+    "removed_duplicate": 228
+   },
+   "wrong number": {
+    "excluded_non_english": 28,
+    "excluded_unresolved": 304
+   }
+  },
+  "primary_smishing_rows": 10480,
+  "separate_generic_spam_rows": 1188
+ },
+ "primary_smishing_recall": {
+  "rows": 10480,
+  "recall": 0.6967557251908397,
+  "interval_95": {
+   "smishing_recall": [
+    0.668226847327255,
+    0.7247382939009033
+   ],
+   "groups": 7148,
+   "method": "group bootstrap over near-duplicate groups, percentile 95% interval",
+   "replicates": 2000
+  },
+  "by_category": {
+   "banking": {
+    "rows": 6445,
+    "predicted_smishing": 5152,
+    "recall": 0.7993793638479442
+   },
+   "delivery": {
+    "rows": 1241,
+    "predicted_smishing": 548,
+    "recall": 0.44157937147461723
+   },
+   "government": {
+    "rows": 1341,
+    "predicted_smishing": 851,
+    "recall": 0.6346010439970171
+   },
+   "hey mum/dad": {
+    "rows": 55,
+    "predicted_smishing": 0,
+    "recall": 0.0
+   },
+   "telecom": {
+    "rows": 1398,
+    "predicted_smishing": 751,
+    "recall": 0.5371959942775394
+   }
+  }
+ },
+ "generic_spam_separate": {
+  "rows": 1188,
+  "predicted": {
+   "legitimate": 489,
+   "generic_spam": 338,
+   "smishing": 361
+  }
+ },
+ "evaluated_at": "2026-10-28T12:29:52.232323+00:00"
+}

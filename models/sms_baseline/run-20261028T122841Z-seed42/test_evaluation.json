@@ -1,0 +1,92 @@
+{
+ "rows": 865,
+ "test_sha256": "dc153500d0718ce5078734db390cbbafa5d9105a1ab41933fca285c477157699",
+ "metrics": {
+  "per_class": {
+   "legitimate": {
+    "precision": 0.9890859481582538,
+    "recall": 1.0,
+    "f1": 0.9945130315500685,
+    "support": 725
+   },
+   "generic_spam": {
+    "precision": 0.8448275862068966,
+    "recall": 0.7777777777777778,
+    "f1": 0.8099173553719008,
+    "support": 63
+   },
+   "smishing": {
+    "precision": 0.8918918918918919,
+    "recall": 0.8571428571428571,
+    "f1": 0.8741721854304636,
+    "support": 77
+   }
+  },
+  "macro_f1": 0.8928675241174776,
+  "weighted_f1": 0.9703560688328037,
+  "confusion_matrix": {
+   "labels": [
+    "legitimate",
+    "generic_spam",
+    "smishing"
+   ],
+   "rows_true_cols_pred": [
+    [
+     725,
+     0,
+     0
+    ],
+    [
+     6,
+     49,
+     8
+    ],
+    [
+     2,
+     9,
+     66
+    ]
+   ]
+  },
+  "undefined_precision": [],
+  "generic_spam_predicted_smishing": {
+   "count": 8,
+   "of": 63,
+   "rate": 0.12698412698412698
+  },
+  "legitimate_predicted_smishing": {
+   "count": 0,
+   "of": 725,
+   "rate": 0.0
+  }
+ },
+ "uncertainty": {
+  "method": "group bootstrap over near-duplicate groups, percentile 95% interval",
+  "replicates": 2000,
+  "seed": 42,
+  "groups": 819,
+  "intervals": {
+   "smishing_recall": [
+    0.746031746031746,
+    0.9342159188955996
+   ],
+   "smishing_precision": [
+    0.7916666666666666,
+    0.9589110986860496
+   ],
+   "macro_f1": [
+    0.8397033049166306,
+    0.931481175047383
+   ],
+   "generic_spam_to_smishing_rate": [
+    0.05194805194805195,
+    0.22641509433962265
+   ],
+   "legitimate_to_smishing_rate": [
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "evaluated_at": "2026-10-28T12:29:22.214436+00:00"
+}

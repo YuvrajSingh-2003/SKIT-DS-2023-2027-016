@@ -101,3 +101,33 @@ The final write count is each file's `writes_needed`. Already-registered hashes 
   It yields the same 250 proposed hashes, but a new `generated_at` and therefore a new file
   checksum. A regenerated file is a new artifact and needs fresh review and approval before
   any write.
+
+## Final smishing batch (prepared 2026-10-29; NOT submitted)
+
+| Artifact | SHA-256 | Entries |
+|---|---|---|
+| `proposed_smishing_reviewed_20261029.json` | `119cf3c8da096e7c043da3281ec337129d4832e3538116cbc8db877a9112e04a` | 425 (8 validation rows excluded where the model disagreed) |
+| `proposed_smishing_final_20261029.json` | `00d49ac9c3deb7db8b5ed5961d7bed21676a03f9683c0eea4714a6384a9805e3` | **421** (4 more excluded: no link, phone or call-to-action, and no independent evidence) |
+
+Both are derived from `proposed_smishing.json` (`829f5955…`), with entries copied verbatim.
+Every final hash was re-derived from its raw row. Locked-test-split rows are excluded, and
+there are no URL entries. The exclusions are conservative; they are not findings that those
+messages are benign.
+
+**Read-only preflight** (`preflight_smishing_final_20261028T195556Z.json`, SHA-256 `f698ca58…1eda59`):
+- 421 confirmed misses, 0 existing entries, 0 failures.
+- Chain 11155111; contract `0x62bFA47Fe851545365b152B746475925100CEc96`; owner
+  `0x74faB8279d61BEC35D9e95B72FAE96ee550B07cd`; `threatCount` 7.
+- Estimated gas: about 260,000 per write, 109,493,994 in total.
+
+**Approved by the owner on 2026-10-29: these 421 writes.** They were not submitted on the
+preparing machine, because the owner's signing key was not configured there. To submit:
+
+```
+.venv/bin/python -m src.blockchain.submit_reviewed_batch \
+  --manifest data/threat_registry/proposed_smishing_final_20261029.json \
+  --log data/threat_registry/submission_log_<UTC>.jsonl --submit
+```
+
+The URL manifest preflight (`preflight_phishing_urls_20261028T192909Z.json`) shows 250 misses.
+The URL batch remains on HOLD and is not authorized.

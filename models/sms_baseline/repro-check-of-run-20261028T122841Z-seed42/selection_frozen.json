@@ -1,0 +1,73 @@
+{
+ "selected": {
+  "name": "char25_C10",
+  "analyzer": "char_wb",
+  "ngram_range": [
+   2,
+   5
+  ],
+  "C": 10.0
+ },
+ "rule": "max validation macro-F1; ties: higher validation smishing F1, then candidate order",
+ "validation": {
+  "per_class": {
+   "legitimate": {
+    "precision": 0.9877049180327869,
+    "recall": 0.9972413793103448,
+    "f1": 0.9924502402196294,
+    "support": 725
+   },
+   "generic_spam": {
+    "precision": 0.8688524590163934,
+    "recall": 0.8412698412698413,
+    "f1": 0.8548387096774194,
+    "support": 63
+   },
+   "smishing": {
+    "precision": 0.9583333333333334,
+    "recall": 0.8961038961038961,
+    "f1": 0.9261744966442953,
+    "support": 77
+   }
+  },
+  "macro_f1": 0.9244878155137813,
+  "weighted_f1": 0.9765279758503116,
+  "confusion_matrix": {
+   "labels": [
+    "legitimate",
+    "generic_spam",
+    "smishing"
+   ],
+   "rows_true_cols_pred": [
+    [
+     723,
+     2,
+     0
+    ],
+    [
+     7,
+     53,
+     3
+    ],
+    [
+     2,
+     6,
+     69
+    ]
+   ]
+  },
+  "undefined_precision": [],
+  "generic_spam_predicted_smishing": {
+   "count": 3,
+   "of": 63,
+   "rate": 0.047619047619047616
+  },
+  "legitimate_predicted_smishing": {
+   "count": 0,
+   "of": 725,
+   "rate": 0.0
+  }
+ },
+ "model_sha256": "9f753dd5235537c77b046044a058592c9c64f791fc4608abce0d3eb0a5b85815",
+ "frozen_at": "2026-10-28T12:30:23.298714+00:00"
+}

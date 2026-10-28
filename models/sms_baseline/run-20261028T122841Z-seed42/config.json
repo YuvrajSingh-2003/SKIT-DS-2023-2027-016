@@ -1,0 +1,78 @@
+{
+ "stage": 2,
+ "classes": [
+  "legitimate",
+  "generic_spam",
+  "smishing"
+ ],
+ "seed": 42,
+ "candidates": [
+  {
+   "name": "word12_C1",
+   "analyzer": "word",
+   "ngram_range": [
+    1,
+    2
+   ],
+   "C": 1.0
+  },
+  {
+   "name": "word12_C10",
+   "analyzer": "word",
+   "ngram_range": [
+    1,
+    2
+   ],
+   "C": 10.0
+  },
+  {
+   "name": "char25_C1",
+   "analyzer": "char_wb",
+   "ngram_range": [
+    2,
+    5
+   ],
+   "C": 1.0
+  },
+  {
+   "name": "char25_C10",
+   "analyzer": "char_wb",
+   "ngram_range": [
+    2,
+    5
+   ],
+   "C": 10.0
+  }
+ ],
+ "selection_rule": "max validation macro-F1; ties: higher validation smishing F1, then candidate order",
+ "decision_policy": "argmax of predicted probabilities; no threshold tuning",
+ "features": "TF-IDF on normalize_text(text) only; min_df=2, sublinear_tf; fitted on train only",
+ "model": "LogisticRegression(multinomial lbfgs, class_weight='balanced', max_iter=5000)",
+ "data": {
+  "source": "Mishra & Soni SMS Phishing Dataset, Mendeley DOI 10.17632/f45bkkt8pr.1 (CC BY 4.0)",
+  "source_csv_sha256": "649844f1c62a6b27e145eaf17a65f7010c56c390e11a794ea8329993a05ba71e",
+  "preparation": "prepare_sources.prepare_mishra_soni: exact and near-duplicate (>=92) label conflicts excluded; same-label duplicates removed",
+  "split": "split_prepared.split_prepared: near-duplicate groups (>=92), seed 42, 70/15/15",
+  "split_metadata_sha256": "107289dfeb88b21ba6c9442bb56fad646aff145e17f82e9198d0906838634626",
+  "split_files_sha256": {
+   "train": "a8e48b561ff8fb377df07829ec31977ab7b09ddf2ac4a7a8879c92336ac46496",
+   "val": "24d7e8849017938885e6ed9062b9bc4d53a87e2cbe9e8b5c968b53b5dc5d7930",
+   "test": "dc153500d0718ce5078734db390cbbafa5d9105a1ab41933fca285c477157699"
+  },
+  "evaluation_manifest_sha256": "59f1e3c6584f76328f4df280d32ccce27b386d665f05e638f2df3f71652f622f",
+  "rows": {
+   "train": 4032,
+   "val": 865
+  }
+ },
+ "versions": {
+  "python": "3.14.8",
+  "scikit-learn": "1.9.1",
+  "numpy": "2.5.4",
+  "pandas": "3.1.0",
+  "scipy": "1.18.1",
+  "joblib": "1.6.0",
+  "rapidfuzz": "3.14.6"
+ },
+ "command": "python -m src.training.train_sms_baseline train"
+}
