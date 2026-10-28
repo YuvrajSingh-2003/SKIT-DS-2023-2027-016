@@ -256,6 +256,46 @@ cd frontend/dashboard && npx vite build
 temporary databases and a local fake RPC; none touches `chainshield.db` or a real network.
 Latest results: `docs/submission/TEST_EVIDENCE.md`.
 
+### Local model prerequisites (fresh checkout)
+
+The model artifacts under `models/` are not in Git: the `model.joblib` files are gitignored,
+and the rest of `models/` is untracked. In a fresh checkout, some model tests therefore cannot
+use the real models.
+
+**SMS model tests fail (they do not skip) when the files are missing:**
+- `tests/test_message_scan.py::TestSmsDetector::test_real_model_returns_known_class_and_probabilities`
+  needs `models/sms_baseline/run-20261028T122841Z-seed42/model.joblib` and
+  `models/sms_baseline/run-20261028T122841Z-seed42/selection_frozen.json`.
+- `tests/test_message_scan.py::TestSmsDetector::test_altered_model_file_is_refused` needs
+  `selection_frozen.json` from the same directory.
+
+To regenerate, run `python -m src.training.train_sms_baseline train`. It needs the prepared
+Mishra & Soni splits (`data/processed/train.csv`, `val.csv`, `test.csv` and
+`sms_split_metadata.json`, all untracked), built from the downloaded dataset as described in
+[datasets.md](datasets.md). It does not work without that data. The command writes a **new**
+directory `models/sms_baseline/run-<UTC timestamp>-seed42/`, never the pinned one. The backend
+and tests load only `run-20261028T122841Z-seed42/`, and accept `model.joblib` only if its SHA-256
+is `9f753dd5…5b85815` (`MODEL_SHA256` in `app/services/sms_detector.py`). An earlier independent
+retrain produced a byte-identical `model.joblib`. Its `selection_frozen.json` differed, but the
+tests only need the file to exist with the selected model's name. The simplest route is to copy
+the original run directory from a machine that has it.
+
+**URL model tests skip when the local URL model is missing.** In the clean-checkout run, 5 tests
+in `tests/test_url_inference.py` skipped (reasons: URL model artifact "not present" or "not
+trained", or URL model metadata "not present"). They
+need `models/url_inference/model.joblib` and `metadata.json`. The skip message names
+`src.training.train_url_inference`, which reads the tracked splits in `data/processed/url_splits/`.
+However, the backend accepts the URL model only if its SHA-256 matches `MODEL_SHA256` in
+`app/services/ml_detector.py`, and `test_pinned_checksum_matches_the_real_artifact` fails (not
+skips) for a model with a different checksum. Nobody has verified that retraining reproduces the
+pinned URL model byte for byte, so copy the original `models/url_inference/` directory instead.
+
+**Clean-checkout result (historical, 2026-10-28).** HEAD `29a8ca9` was exported with
+`git archive` and the full suite run without `models/`: 564 passed, 2 failed, 5 skipped, 27
+deselected (`TestPreprocessText`). Both failures were the two SMS tests above, caused by the
+missing local SMS model files. With the local artifacts present, the same suite passes in full
+(571 passed; see `docs/submission/TEST_EVIDENCE.md`).
+
 ## Troubleshooting
 
 | Symptom | Meaning |
