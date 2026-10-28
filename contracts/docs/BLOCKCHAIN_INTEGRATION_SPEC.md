@@ -440,7 +440,17 @@ The seeding pipeline (`src/blockchain/seed_registry.py`) populates the smart con
 
 ### 2. Strict Threat-Only Selection (Zero-Benign Policy)
 ChainShield's smart contract is strictly a registry of **known threats**, not a database of the entire internet or benign communications:
-- Only records labeled as confirmed threats (`phishing`, `smishing`, `spam`, or PhiUSIIL `label == 0`) are selected for seeding.
+- Only records labeled as confirmed threats are selected for seeding (policy revised 2026-10-28):
+  - **URL datasets:** PhiUSIIL `label == 0` (also `phishing`, `malicious`, `threat`).
+  - **Message datasets:** `smishing` only. Generic spam (`spam`, `generic_spam`) is a separate,
+    non-threat class and is **never** registered implicitly. `phishing`, `malicious`, `0` and `1`
+    have no verified SMS meaning and are rejected unless `--threat-label` names the threat value.
+  - Labels are compared after trimming and lowercasing. Unrecognized or misspelled labels are
+    reported in the summary as unrecognized and are not registered.
+  - Seed messages only from the prepared, conflict-filtered data
+    (`src/data/prepare_sources.prepare_mishra_soni`), never from raw files, and pass
+    `--threat-label smishing` explicitly. Raw files contain texts that carry both `spam` and
+    `smishing` labels; preparation excludes them.
 - **Benign records are NEVER registered**: Registering benign content on-chain would waste transaction gas and subvert the registry's fast-path query logic.
 - If a queried hash is absent (`threatExists(hash) == false`), the client immediately routes the input to the ML classification pipeline.
 

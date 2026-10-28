@@ -123,12 +123,17 @@ class TestDetectionAndLabels:
         assert is_threat_label("legitimate", ThreatTypeEnum.URL) is False
 
     def test_is_threat_label_message_convention(self):
-        """SMS convention: spam/malicious/1 is threat, ham/0 is benign."""
-        assert is_threat_label("spam", ThreatTypeEnum.MESSAGE) is True
+        """SMS policy (2026-10-28): only smishing is a threat; generic spam is not;
+        phishing/malicious/0/1 are ambiguous for SMS data and need --threat-label."""
         assert is_threat_label("smishing", ThreatTypeEnum.MESSAGE) is True
-        assert is_threat_label("1", ThreatTypeEnum.MESSAGE) is True
+        assert is_threat_label("Smishing", ThreatTypeEnum.MESSAGE) is True
+        assert is_threat_label("spam", ThreatTypeEnum.MESSAGE) is False
+        assert is_threat_label("generic_spam", ThreatTypeEnum.MESSAGE) is False
         assert is_threat_label("ham", ThreatTypeEnum.MESSAGE) is False
         assert is_threat_label("benign", ThreatTypeEnum.MESSAGE) is False
+        for ambiguous in ("1", "0", "phishing", "malicious"):
+            with pytest.raises(ValueError, match="Ambiguous"):
+                is_threat_label(ambiguous, ThreatTypeEnum.MESSAGE)
 
     def test_ambiguous_label_raises(self):
         """Ambiguous/unknown labels raise ValueError."""
@@ -187,24 +192,25 @@ class TestMessageProcessing:
     """Test message dataset filtering, canonicalization, and deduplication."""
 
     def test_message_threat_selection(self, sample_message_csv: Path):
-        """Threat messages are selected; ham messages are skipped."""
+        """Only smishing is selected; generic spam and ham are skipped and counted."""
         records, stats = process_dataset(sample_message_csv)
-        assert stats.threat_records == 3
-        assert stats.benign_records == 2
+        assert stats.threat_records == 1
+        assert stats.benign_records == 4          # 2 spam + 2 ham
+        assert stats.generic_spam_records == 2
+        assert stats.invalid_records == 2         # missing content, missing label
 
     def test_message_canonical_deduplication(self, sample_message_csv: Path):
         """Messages differing only by casing/whitespace are deduplicated."""
         records, stats = process_dataset(sample_message_csv)
-        # 1. "Your account is blocked! Call 1800-NOW" (and lowercase variant)
-        # 2. "URGENT: Click http://claim.me to collect prize"
-        assert stats.unique_threat_hashes == 2
-        assert len(records) == 2
-        assert stats.canonical_duplicate_records == 1
+        # Only the smishing row is a threat; the two spam variants are generic spam.
+        assert stats.unique_threat_hashes == 1
+        assert len(records) == 1
+        assert stats.canonical_duplicate_records == 0
 
     def test_message_hashing_matches_existing_pipeline(self, sample_message_csv: Path):
         """Hashes match the exact generate_message_hash function output."""
         records, _ = process_dataset(sample_message_csv)
-        expected_hash = generate_message_hash("Your account is blocked! Call 1800-NOW")
+        expected_hash = generate_message_hash("URGENT: Click http://claim.me to collect prize")
         seeded_hashes = {r.threatHash for r in records}
         assert expected_hash in seeded_hashes
 
@@ -262,3 +268,71 @@ class TestDryRunSafety:
         captured = capsys.readouterr().out
         assert "DRY RUN COMPLETE — No blockchain transactions were sent." in captured
         assert "Unique threat hashes:        2" in captured
+
+
+
+# ══════════════════════════════════════════════════════════════════════
+#  Label policy and visible label accounting (2026-10-28)
+# ══════════════════════════════════════════════════════════════════════
+
+def _write(tmp_path, rows):
+    path = tmp_path / "labels.csv"
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        csv.writer(f).writerows([["message", "label"], *rows])
+    return path
+
+
+class TestLabelPolicyAndCounting:
+
+    def test_smishing_allowlist_counts_variants_and_spam_separately(self, tmp_path):
+        path = _write(tmp_path, [
+            ["Pay the fee at http://parcel.example now", "Smishing"],
+            ["Verify your account at http://bank.example", " smishing "],
+            ["Cheap watches, buy today", "spam"],
+            ["See you at 6", "ham"],
+            ["Typo label example message", "smishng"],
+        ])
+
+        records, stats = process_dataset(path, explicit_threat_label="smishing")
+
+        assert len(records) == 2
+        assert stats.generic_spam_records == 1 and stats.benign_records == 2
+        assert stats.unrecognized_label_records == 1      # misspelling is not "benign"
+        assert stats.label_outcomes["smishing"] == {"threat": 2}
+        assert stats.label_outcomes["spam"] == {"non_threat": 1}
+        assert stats.label_outcomes["smishng"] == {"unrecognized": 1}
+
+    def test_default_policy_never_registers_generic_spam(self, tmp_path):
+        path = _write(tmp_path, [["Cheap watches, buy today", "spam"], ["Win cash", "Spam"]])
+
+        records, stats = process_dataset(path)
+
+        assert records == []
+        assert stats.generic_spam_records == 2 and stats.threat_records == 0
+
+    def test_ambiguous_message_labels_are_reported_not_registered(self, tmp_path):
+        path = _write(tmp_path, [["Some message one", "phishing"], ["Some message two", "1"]])
+
+        records, stats = process_dataset(path)
+
+        assert records == []
+        assert stats.unrecognized_label_records == 2
+        assert set(stats.label_outcomes) == {"phishing", "1"}
+
+    def test_summary_shows_label_outcomes(self, tmp_path, capsys):
+        path = _write(tmp_path, [["Pay now at http://x.example", "smishing"], ["Hi", "smishng"]])
+
+        _, stats = process_dataset(path)
+        stats.print_summary()
+
+        out = capsys.readouterr().out
+        assert "Unrecognized labels" in out and "'smishng'" in out and "generic spam" in out
+
+    def test_summary_contains_no_message_text(self, tmp_path, capsys):
+        secret = "zz private synthetic text zz"
+        path = _write(tmp_path, [[secret, "smishing"], [secret + " 2", "ham"]])
+
+        _, stats = process_dataset(path)
+        stats.print_summary()
+
+        assert secret not in capsys.readouterr().out

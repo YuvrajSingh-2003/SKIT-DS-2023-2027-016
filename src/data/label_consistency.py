@@ -125,18 +125,18 @@ def check_ambiguous_matches(df: pd.DataFrame, num_examples: int = 10) -> pd.Data
     ambiguous_df = df_matches[df_matches["match_count"] >= 2].copy()
     total_ambiguous = len(ambiguous_df)
 
-    malicious_ambiguous = len(ambiguous_df[ambiguous_df["label"] == "malicious"])
-    benign_ambiguous = len(ambiguous_df[ambiguous_df["label"] == "benign"])
+    malicious_ambiguous = len(ambiguous_df[ambiguous_df["label"] == "smishing"])
+    benign_ambiguous = len(ambiguous_df[ambiguous_df["label"] == "legitimate"])
 
     print(f"  Total messages matching 2+ categories: {total_ambiguous}")
     print(f"    - Malicious rows (scam classification affected): {malicious_ambiguous}")
-    print(f"    - Benign rows (assigned 'benign' despite scam keywords): {benign_ambiguous}")
+    print(f"    - Legitimate rows (labelled 'legitimate' despite scam keywords): {benign_ambiguous}")
 
     print(f"\n  Showing {min(num_examples, total_ambiguous)} Ambiguous Examples:")
     print("  " + "-" * 66)
 
     # Prefer displaying malicious ambiguous examples as they demonstrate categorization conflicts
-    display_df = ambiguous_df[ambiguous_df["label"] == "malicious"]
+    display_df = ambiguous_df[ambiguous_df["label"] == "smishing"]
     if len(display_df) < num_examples:
         display_df = ambiguous_df
 
@@ -202,7 +202,7 @@ def run_consistency_checks(data_path: Path = DATA_PATH) -> None:
     ambiguous_df = check_ambiguous_matches(df, num_examples=10)
     cat_counts = check_category_sizes(df, threshold=50)
 
-    mal_ambiguous = len(ambiguous_df[ambiguous_df["label"] == "malicious"])
+    mal_ambiguous = len(ambiguous_df[ambiguous_df["label"] == "smishing"])
     flagged = [cat for cat, count in cat_counts.items() if count < 50]
     total_issues = sum(issues.values())
 

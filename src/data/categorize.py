@@ -67,10 +67,23 @@ CATEGORY_PATTERNS = {
 
 
 def assign_category(text: str, label: str) -> str:
-    """Assign a category based on label and keyword/regex matching."""
+    """Assign a category from the canonical label and keyword/regex matching.
+
+    Generic spam keeps its own category and is never routed into the smishing
+    scam categories. Raises ValueError for missing or blank text and for
+    unknown labels; it never returns a category for invalid input.
+    """
+    # Missing or blank text is invalid input. It is never assigned a category.
+    if text is None or pd.isna(text) or str(text).strip() == "":
+        raise ValueError("Missing or blank text; refusing to assign a category")
+
     norm_label = str(label).strip().lower()
-    if norm_label != "malicious":
+    if norm_label == "legitimate":
         return "benign"
+    if norm_label == "generic_spam":
+        return "generic_spam"
+    if norm_label != "smishing":
+        raise ValueError(f"Unknown label {norm_label!r}")
 
     text_str = str(text)
     for category, pattern in CATEGORY_PATTERNS.items():

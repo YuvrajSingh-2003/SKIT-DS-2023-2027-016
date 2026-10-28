@@ -8,7 +8,12 @@
  * remains cleanly separated and centralized.
  */
 
-import { scanUrl as sharedScanUrl, getScanHistory as sharedGetScanHistory } from "../../shared/api.js";
+import {
+  scanUrl as sharedScanUrl,
+  getScanHistory as sharedGetScanHistory,
+  scanMessage as sharedScanMessage,
+  getMessageHistory as sharedGetMessageHistory,
+} from "../../shared/api.js";
 
 /**
  * Base URL resolution:
@@ -35,10 +40,20 @@ export async function scanUrl(url) {
 /**
  * GET /scan/history
  * Calls the backend /scan/history endpoint to retrieve previously scanned URLs.
- * Note: history items do not contain blockchain_available or blockchain_found.
+ * History items include blockchain_status (see frontend/shared/api.js for its values).
  *
  * @returns {Promise<Array<HistoryItem>>}
  */
 export async function getScanHistory() {
   return sharedGetScanHistory(BASE_URL);
+}
+
+/** POST /message/scan — classify an SMS/message (sent only on explicit submit). */
+export async function scanMessage(text) {
+  return sharedScanMessage(text, BASE_URL);
+}
+
+/** GET /message/history — metadata-only message scan history. */
+export async function getMessageHistory() {
+  return sharedGetMessageHistory(BASE_URL);
 }

@@ -1,7 +1,7 @@
-"""Unit tests for feature extraction functions in src/features.py."""
+"""Unit tests for feature extraction functions in src/text_features.py."""
 
 import pytest
-from src.features import (
+from src.text_features import (
     extract_url_features,
     extract_text_features,
     build_tfidf_features,

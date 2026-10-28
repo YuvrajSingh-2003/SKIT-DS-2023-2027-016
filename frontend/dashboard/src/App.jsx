@@ -3,6 +3,7 @@ import Layout from "./components/Layout.jsx";
 import OverviewPage from "./pages/OverviewPage.jsx";
 import ScannerPage from "./pages/ScannerPage.jsx";
 import HistoryPage from "./pages/HistoryPage.jsx";
+import MessagesPage from "./pages/MessagesPage.jsx";
 
 /**
  * App – top-level route table.
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="overview" element={<OverviewPage />} />
         <Route path="scanner" element={<ScannerPage />} />
         <Route path="history" element={<HistoryPage />} />
+        <Route path="messages" element={<MessagesPage />} />
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/overview" replace />} />
       </Route>

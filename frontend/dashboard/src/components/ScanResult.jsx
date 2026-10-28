@@ -28,10 +28,22 @@ export default function ScanResult({ result }) {
     // These are only present on live scan responses, not history records:
     blockchain_available,
     blockchain_found,
+    // Newer backends: match_threat | match_non_threat | no_match | unavailable.
+    blockchain_status,
   } = result;
 
+  // Only match_threat means a known threat. Older backends lack blockchain_status;
+  // there, blockchain_found is the only signal available.
+  const registryThreat = blockchain_status
+    ? blockchain_status === "match_threat"
+    : blockchain_found;
+  const registryNonThreat = blockchain_status === "match_non_threat";
+  // Legacy history rows: an entry existed but its verdict was not recorded.
+  const registryUnclassified = blockchain_status === "match_unclassified";
+  const registryNotRecorded = blockchain_status === "not_recorded";
+
   const hasBlockchainData =
-    typeof blockchain_available === "boolean";
+    typeof blockchain_available === "boolean" || typeof blockchain_status === "string";
 
   return (
     <div className="scan-result card">
@@ -124,14 +136,28 @@ export default function ScanResult({ result }) {
           <div className="divider" />
           <section className="sr-section" aria-label="Blockchain registry status">
             <h3 className="sr-section-title">Blockchain Registry</h3>
-            {!blockchain_available ? (
+            {registryNotRecorded ? (
+              <p className="sr-blockchain-note sr-bc-unavailable">
+                Registry status was not recorded for this older scan.
+              </p>
+            ) : !blockchain_available ? (
               <p className="sr-blockchain-note sr-bc-unavailable">
                 The blockchain registry was not reachable during this scan.
                 This does not indicate the URL is safe.
               </p>
-            ) : blockchain_found ? (
+            ) : registryThreat ? (
               <p className="sr-blockchain-note sr-bc-threat">
                 This URL's hash was found in the blockchain threat registry.
+              </p>
+            ) : registryUnclassified ? (
+              <p className="sr-blockchain-note sr-bc-unavailable">
+                This older scan found a registry entry, but its verdict was not
+                recorded. It is not shown as a confirmed threat.
+              </p>
+            ) : registryNonThreat ? (
+              <p className="sr-blockchain-note sr-bc-clear">
+                This URL's hash is registered without a threat verdict. This is
+                not a safety guarantee.
               </p>
             ) : (
               <p className="sr-blockchain-note sr-bc-clear">
@@ -146,7 +172,7 @@ export default function ScanResult({ result }) {
       {/* ── Disclaimer ── */}
       <div className="divider" />
       <p className="sr-disclaimer">
-        ChainShield uses heuristic checks and a blockchain threat registry.
+        ChainShield combines heuristic checks, an advisory URL model and a blockchain threat registry.
         A "Safe" result does not guarantee the URL is free from all threats.
         Exercise caution before visiting unknown links.
       </p>

@@ -14,7 +14,7 @@ export default function ScannerPage() {
           URL Scanner
         </h1>
         <p className="section-subtitle" style={{ margin: 0 }}>
-          Enter a URL to check it against heuristic security rules and the
+          Enter a URL to check it against heuristic security rules, an advisory URL model and the
           blockchain threat registry.
         </p>
       </div>

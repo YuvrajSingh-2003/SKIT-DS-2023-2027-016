@@ -10,6 +10,10 @@ Architecture & Privacy Guarantees:
   `src.blockchain.canonicalize` and `src.blockchain.hashing`.
 - Seeding registers ONLY confirmed threats (verdict = 1, confidence = 100).
 - Benign records are strictly excluded.
+- Messages: only 'smishing' is a threat. Generic spam is counted separately and never
+  registered. Unrecognized labels are counted and reported, not registered.
+- Seed messages from prepared, conflict-filtered data with --threat-label smishing
+  (see contracts/docs/BLOCKCHAIN_INTEGRATION_SPEC.md, threat-only selection).
 - Deduplication is performed on the final Keccak-256 `bytes32` hash.
 - Zero raw text, URLs, or PII are ever sent in blockchain transactions,
   stored on-chain, or exported into generated seed payloads.
@@ -24,7 +28,7 @@ import csv
 import json
 import os
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from enum import IntEnum
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
@@ -74,14 +78,39 @@ class ThreatSeedRecord:
         }
 
 
+# Label policy (2026-10-28). Labels are compared after strip() and lower().
+# Messages: only smishing is a registry threat. Generic spam is a separate class and is
+# never registered implicitly. phishing/malicious/0/1 have no verified SMS meaning and
+# require an explicit --threat-label.
+URL_THREAT_LABELS = frozenset({"0", "phishing", "malicious", "threat"})
+URL_NON_THREAT_LABELS = frozenset({"1", "legitimate", "benign", "safe"})
+MESSAGE_THREAT_LABELS = frozenset({"smishing"})
+MESSAGE_GENERIC_SPAM_LABELS = frozenset({"spam", "generic_spam"})
+MESSAGE_NON_THREAT_LABELS = frozenset({"ham", "legitimate", "benign", "safe"}) | MESSAGE_GENERIC_SPAM_LABELS
+MESSAGE_AMBIGUOUS_LABELS = frozenset({"phishing", "malicious", "0", "1"})
+
+LABEL_THREAT = "threat"
+LABEL_NON_THREAT = "non_threat"
+LABEL_UNRECOGNIZED = "unrecognized"
+
+
 @dataclass
 class SeedingStatistics:
     """Summary metrics of a dataset seeding run."""
     dataset_path: str
     total_records: int = 0
     threat_records: int = 0
-    benign_records: int = 0
-    invalid_records: int = 0
+    benign_records: int = 0             # recognized non-threat labels, including generic spam
+    generic_spam_records: int = 0       # subset of benign_records: generic spam, not registered
+    unrecognized_label_records: int = 0 # unknown, misspelled or ambiguous labels (not registered)
+    invalid_records: int = 0            # missing content/label or unhashable content
+    label_outcomes: Dict[str, Dict[str, int]] = field(default_factory=dict)
+
+    def count_label(self, label: str, outcome: str) -> None:
+        """Record how a normalized label was handled (label text truncated to 30 chars)."""
+        key = label[:30]
+        self.label_outcomes.setdefault(key, {}).setdefault(outcome, 0)
+        self.label_outcomes[key][outcome] += 1
     raw_duplicate_records: int = 0
     canonical_duplicate_records: int = 0
     unique_threat_hashes: int = 0
@@ -96,8 +125,14 @@ class SeedingStatistics:
         print(f"Dataset Path:                {self.dataset_path}")
         print(f"Total dataset records:       {self.total_records:,}")
         print(f"Threat records (eligible):   {self.threat_records:,}")
-        print(f"Benign records (skipped):    {self.benign_records:,}")
+        print(f"Non-threat records (skipped):{self.benign_records:,}")
+        print(f"  - generic spam (skipped):  {self.generic_spam_records:,}")
+        print(f"Unrecognized labels (skipped): {self.unrecognized_label_records:,}")
         print(f"Invalid / missing records:   {self.invalid_records:,}")
+        if self.label_outcomes:
+            print("Labels seen (normalized -> outcome counts):")
+            for label in sorted(self.label_outcomes):
+                print(f"  {label!r}: {self.label_outcomes[label]}")
         print("-" * 60)
         print(f"Raw duplicate records:       {self.raw_duplicate_records:,}")
         print(f"Canonical duplicates:        {self.canonical_duplicate_records:,}")
@@ -155,35 +190,49 @@ def detect_columns(header: List[str]) -> Tuple[str, str, ThreatTypeEnum]:
 
 
 def is_threat_label(label: str, threat_type: ThreatTypeEnum, explicit_threat_label: Optional[str] = None) -> bool:
-    """Determine whether a dataset label indicates a confirmed threat.
+    """Decide whether a dataset label marks a threat to register.
+
+    Labels are compared after strip() and lower(). Returns True (threat) or False
+    (recognized non-threat). Raises ValueError for any label that is not recognized
+    for the dataset type, so misspellings are reported instead of silently skipped.
 
     Policy:
-    - If explicit_threat_label is provided, matches that value (case-insensitive).
-    - For PhiUSIIL URL dataset: '0' = Phishing (threat), '1' = Legitimate (benign).
-    - For message datasets: '1', 'spam', 'malicious', 'smishing', 'phishing' = threat.
-      '0', 'ham', 'benign', 'legitimate' = benign.
+    - URL (PhiUSIIL): '0', 'phishing', 'malicious', 'threat' are threats; '1',
+      'legitimate', 'benign', 'safe' are not.
+    - Message: only 'smishing' is a threat. 'spam'/'generic_spam' (generic spam),
+      'ham', 'legitimate', 'benign', 'safe' are not. 'phishing', 'malicious', '0' and
+      '1' are ambiguous for SMS data and require explicit_threat_label.
+    - With explicit_threat_label, that value is the only threat; other recognized
+      labels for the type (including the ambiguous ones) are non-threats; anything
+      else raises.
     """
     cleaned = str(label).strip().lower()
 
-    if explicit_threat_label is not None:
-        return cleaned == explicit_threat_label.strip().lower()
-
     if threat_type == ThreatTypeEnum.URL:
-        # PhiUSIIL benchmark convention: 0 is phishing threat, 1 is legitimate
-        if cleaned in ("0", "phishing", "malicious", "threat"):
-            return True
-        elif cleaned in ("1", "legitimate", "benign", "safe"):
-            return False
-        else:
-            raise ValueError(f"Ambiguous URL dataset label: '{label}'. Specify --threat-label explicitly.")
+        known = URL_THREAT_LABELS | URL_NON_THREAT_LABELS
+        default_threats = URL_THREAT_LABELS
+        ambiguous = frozenset()
     else:
-        # SMS / message benchmark convention
-        if cleaned in ("1", "spam", "malicious", "smishing", "phishing"):
+        known = MESSAGE_THREAT_LABELS | MESSAGE_NON_THREAT_LABELS | MESSAGE_AMBIGUOUS_LABELS
+        default_threats = MESSAGE_THREAT_LABELS
+        ambiguous = MESSAGE_AMBIGUOUS_LABELS
+
+    if explicit_threat_label is not None:
+        explicit = explicit_threat_label.strip().lower()
+        if cleaned == explicit:
             return True
-        elif cleaned in ("0", "ham", "benign", "legitimate", "safe"):
+        if cleaned in known:
             return False
-        else:
-            raise ValueError(f"Ambiguous message dataset label: '{label}'. Specify --threat-label explicitly.")
+        raise ValueError(f"Unrecognized label: '{str(label)[:30]}'")
+
+    if cleaned in default_threats:
+        return True
+    if cleaned in ambiguous:
+        raise ValueError(f"Ambiguous message dataset label: '{str(label)[:30]}'. Specify --threat-label explicitly.")
+    if cleaned in known:
+        return False
+    kind = "URL" if threat_type == ThreatTypeEnum.URL else "message"
+    raise ValueError(f"Ambiguous {kind} dataset label: '{str(label)[:30]}'. Specify --threat-label explicitly.")
 
 
 def process_dataset(
@@ -258,15 +307,22 @@ def process_dataset(
                 continue
 
             # Classify threat vs benign
+            normalized_label = raw_label.strip().lower()
             try:
                 is_threat = is_threat_label(raw_label, active_threat_type, explicit_threat_label)
             except ValueError:
-                stats.invalid_records += 1
+                stats.unrecognized_label_records += 1
+                stats.count_label(normalized_label, LABEL_UNRECOGNIZED)
                 continue
 
             if not is_threat:
                 stats.benign_records += 1
+                if active_threat_type == ThreatTypeEnum.MESSAGE and normalized_label in MESSAGE_GENERIC_SPAM_LABELS:
+                    stats.generic_spam_records += 1
+                stats.count_label(normalized_label, LABEL_NON_THREAT)
                 continue
+
+            stats.count_label(normalized_label, LABEL_THREAT)
 
             stats.threat_records += 1
 

@@ -220,3 +220,12 @@ a { color: var(--teal); }
 }
 .dashboard-link { font-size: 11px; font-weight: 600; }
 .footer-name    { font-size: 10px; color: var(--muted); margin-left: auto; }
+
+/* ── Scan mode toggle and message input (Stage 3) ─────────── */
+.mode-row { display: flex; gap: 6px; margin-bottom: 10px; }
+.mode-btn { flex: 1; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px;
+            background: #fff; color: #334155; font: inherit; cursor: pointer; }
+.mode-btn.mode-active { background: #0e7490; border-color: #0e7490; color: #fff; }
+.message-row { display: flex; flex-direction: column; gap: 6px; }
+.message-input { resize: vertical; min-height: 72px; font-family: inherit; }
+.model-msg { margin: 8px 0 0; font-size: 12px; color: #475569; }

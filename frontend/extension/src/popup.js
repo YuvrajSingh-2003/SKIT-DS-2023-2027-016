@@ -1,14 +1,14 @@
 /**
  * ChainShield Chrome Extension – popup.js
  *
- * Vanilla JS — no bundler, no framework.
- * Runs in the popup context (NOT a content script or service worker).
+ * Vanilla JS — no bundler, no framework. Runs in the popup context only.
+ * Request, timeout and response interpretation live in src/logic.js
+ * (globalThis.ChainShieldLogic), which is unit-tested with Node.
  *
- * Architecture notes:
- * - The extension calls the FastAPI backend directly via fetch().
- * - The backend URL is set by BACKEND_URL below. Change this for production.
- * - No blockchain calls are made from the extension — that is the backend's job.
- * - No tabs or activeTab permissions are used; the user pastes the URL manually.
+ * - The user explicitly pastes a URL or a message and presses Scan. Nothing is
+ *   read from pages, tabs or the clipboard, and nothing runs in the background.
+ * - Failures, timeouts and malformed responses are shown as errors, never as safe.
+ * - No blockchain calls and no secrets in the extension; the backend does that.
  */
 
 "use strict";
@@ -16,266 +16,229 @@
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 /**
- * Backend base URL.
- * For local development this must match the host_permissions entry in manifest.json.
- * For production, update both this constant AND the manifest's host_permissions.
+ * Backend base URL. Must match host_permissions in manifest.json.
+ * For another host, change both this constant and the manifest.
  */
 const BACKEND_URL = "http://127.0.0.1:8000";
 
-/**
- * (Optional) Dashboard URL shown in the footer link.
- * Set to an empty string to hide the link.
- */
+/** Dashboard link shown in the footer. Empty string hides it. */
 const DASHBOARD_URL = "http://localhost:5173";
 
+const Logic = globalThis.ChainShieldLogic;
+
 // ─── DOM references ───────────────────────────────────────────────────────────
-const form           = document.getElementById("scan-form");
-const urlInput       = document.getElementById("url-input");
-const scanBtn        = document.getElementById("scan-btn");
-const validationMsg  = document.getElementById("validation-msg");
-const dashboardLink  = document.getElementById("dashboard-link");
+const form            = document.getElementById("scan-form");
+const urlRow          = document.getElementById("url-row");
+const urlInput        = document.getElementById("url-input");
+const scanBtn         = document.getElementById("scan-btn");
+const messageRow      = document.getElementById("message-row");
+const messageInput    = document.getElementById("message-input");
+const scanMessageBtn  = document.getElementById("scan-message-btn");
+const modeUrlBtn      = document.getElementById("mode-url");
+const modeMessageBtn  = document.getElementById("mode-message");
+const idleHint        = document.getElementById("idle-hint");
+const validationMsg   = document.getElementById("validation-msg");
+const dashboardLink   = document.getElementById("dashboard-link");
 
-const stateIdle      = document.getElementById("state-idle");
-const stateLoading   = document.getElementById("state-loading");
-const stateError     = document.getElementById("state-error");
-const stateResult    = document.getElementById("state-result");
+const stateIdle       = document.getElementById("state-idle");
+const stateLoading    = document.getElementById("state-loading");
+const stateError      = document.getElementById("state-error");
+const stateResult     = document.getElementById("state-result");
 
-const errorMsg       = document.getElementById("error-msg");
-const errorHint      = document.getElementById("error-hint");
+const errorMsg        = document.getElementById("error-msg");
+const errorHint       = document.getElementById("error-hint");
 
-const resultBadge    = document.getElementById("result-badge");
-const resultDomain   = document.getElementById("result-domain");
+const resultBadge     = document.getElementById("result-badge");
+const resultDomain    = document.getElementById("result-domain");
+const detailHttps     = document.getElementById("detail-https");
+const detailIp        = document.getElementById("detail-ip");
+const detailHttpsVal  = document.getElementById("detail-https-val");
+const detailIpVal     = document.getElementById("detail-ip-val");
+const modelMsg        = document.getElementById("model-msg");
 
-const detailHttpsVal = document.getElementById("detail-https-val");
-const detailIpVal    = document.getElementById("detail-ip-val");
+const blockchainSec   = document.getElementById("blockchain-section");
+const blockchainMsg   = document.getElementById("blockchain-msg");
 
-const blockchainSec  = document.getElementById("blockchain-section");
-const blockchainMsg  = document.getElementById("blockchain-msg");
+const findingsSec     = document.getElementById("findings-section");
+const findingsList    = document.getElementById("findings-list");
+const noFindings      = document.getElementById("no-findings");
 
-const findingsSec    = document.getElementById("findings-section");
-const findingsList   = document.getElementById("findings-list");
-const noFindings     = document.getElementById("no-findings");
+let mode = "url";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Show one state panel, hide others. */
+/** Show exactly one state panel; hide the others. */
 function showState(name) {
-  const states = [
-    { name: "idle", el: stateIdle },
-    { name: "loading", el: stateLoading },
-    { name: "error", el: stateError },
-    { name: "result", el: stateResult },
-  ];
-
-  for (const s of states) {
-    if (s.el) {
-      if (s.name === name) {
-        s.el.hidden = false;
-        s.el.removeAttribute("hidden");
-        s.el.style.display = "";
-      } else {
-        s.el.hidden = true;
-        s.el.setAttribute("hidden", "");
-        s.el.style.display = "none";
-      }
-    }
+  const states = { idle: stateIdle, loading: stateLoading, error: stateError, result: stateResult };
+  for (const [key, el] of Object.entries(states)) {
+    if (!el) continue;
+    const visible = key === name;
+    el.hidden = !visible;
+    el.style.display = visible ? "" : "none";
   }
 }
 
-/** Returns true if value looks like a valid http(s) URL. */
-function isValidUrl(value) {
-  try {
-    const u = new URL(value.trim());
-    return u.protocol === "http:" || u.protocol === "https:";
-  } catch {
-    return false;
-  }
+function setBusy(busy) {
+  scanBtn.disabled = busy;
+  scanMessageBtn.disabled = busy;
+  urlInput.disabled = busy;
+  messageInput.disabled = busy;
+  scanBtn.textContent = busy && mode === "url" ? "Scanning…" : "Scan";
+  scanMessageBtn.textContent = busy && mode === "message" ? "Scanning…" : "Scan message";
 }
 
-/** Build the risk badge class name from the backend risk_level string. */
-function badgeClass(level) {
-  const map = { SAFE: "badge-safe", MEDIUM: "badge-medium", HIGH: "badge-high" };
-  return map[(level || "").toUpperCase()] ?? "badge-unknown";
+function showValidation(text, input) {
+  validationMsg.textContent = text;
+  validationMsg.hidden = false;
+  input.classList.add("input-error");
 }
 
-/** Build the badge label from the risk_level string. */
-function badgeLabel(level) {
-  const l = (level || "UNKNOWN").toUpperCase();
-  const icons = { SAFE: "✓", MEDIUM: "!", HIGH: "✕", UNKNOWN: "?" };
-  const labels = { SAFE: "Safe", MEDIUM: "Medium Risk", HIGH: "High Risk", UNKNOWN: "Unknown" };
-  return `${icons[l] ?? "?"} ${labels[l] ?? "Unknown"}`;
+function clearValidation() {
+  validationMsg.hidden = true;
+  urlInput.classList.remove("input-error");
+  messageInput.classList.remove("input-error");
 }
 
-// ─── API call ─────────────────────────────────────────────────────────────────
-
-async function callScanApi(url) {
-  let response;
-
-  try {
-    response = await fetch(`${BACKEND_URL}/scan`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    });
-  } catch (networkErr) {
-    throw {
-      type: "network",
-      message: "Cannot reach the ChainShield backend.",
-      hint: `Make sure the server is running at ${BACKEND_URL}`,
-    };
-  }
-
-  if (!response.ok) {
-    let detail = "";
-    try {
-      const body = await response.json();
-      detail = body.detail || body.message || "";
-    } catch { /* ignore */ }
-    throw {
-      type: "http",
-      message: `Server error ${response.status}: ${detail || response.statusText}`,
-    };
-  }
-
-  try {
-    return await response.json();
-  } catch {
-    throw { type: "parse", message: "Unexpected response format from server." };
-  }
-}
-
-// ─── Render result ────────────────────────────────────────────────────────────
-
-function renderResult(data) {
-  const {
-    domain,
-    https,
-    uses_ip,
-    risk_level,
-    findings = [],
-    blockchain_available,
-    blockchain_found,
-  } = data;
-
-  // ── Risk badge ──
-  resultBadge.className = `badge ${badgeClass(risk_level)}`;
-  resultBadge.textContent = badgeLabel(risk_level);
-  resultBadge.setAttribute("aria-label", `Risk level: ${risk_level || "UNKNOWN"}`);
-
-  // ── Domain ──
-  resultDomain.textContent = domain || "";
-
-  // ── HTTPS pill ──
-  detailHttpsVal.textContent = https ? "Yes" : "No";
-  detailHttpsVal.className   = `pill ${https ? "pill-yes" : "pill-no"}`;
-
-  // ── IP pill ──
-  detailIpVal.textContent = uses_ip ? "Yes" : "No";
-  detailIpVal.className   = `pill ${uses_ip ? "pill-no" : "pill-yes"}`;
-
-  // ── Blockchain status ──
-  if (typeof blockchain_available === "boolean") {
-    blockchainSec.hidden = false;
-    if (!blockchain_available) {
-      blockchainSec.className = "blockchain-section blockchain-unavailable";
-      blockchainMsg.textContent =
-        "Registry unavailable during this scan. This does not indicate safety.";
-    } else if (blockchain_found) {
-      blockchainSec.className = "blockchain-section blockchain-found";
-      blockchainMsg.textContent =
-        "⚠ URL found in blockchain threat registry.";
-    } else {
-      blockchainSec.className = "blockchain-section blockchain-clear";
-      blockchainMsg.textContent =
-        "Registry checked — URL hash not found. Absence does not guarantee safety.";
-    }
-  } else {
-    blockchainSec.hidden = true;
-  }
-
-  // ── Findings ──
+function renderFindings(findings, emptyText) {
+  findingsList.textContent = "";
   if (findings.length > 0) {
-    findingsSec.hidden = false;
-    noFindings.hidden  = true;
-    // Clear previous findings
-    findingsList.innerHTML = "";
     for (const f of findings) {
       const li = document.createElement("li");
-      // findings are plain text strings from the backend — safe to set as text
-      li.textContent = f;
+      li.textContent = f;              // plain text only
       findingsList.appendChild(li);
     }
+    findingsSec.hidden = false;
+    noFindings.hidden = true;
   } else {
     findingsSec.hidden = true;
-    noFindings.hidden  = false;
+    noFindings.textContent = emptyText;
+    noFindings.hidden = false;
   }
+}
 
+function setMode(next) {
+  mode = next;
+  const isUrl = mode === "url";
+  urlRow.hidden = !isUrl;
+  messageRow.hidden = isUrl;
+  modeUrlBtn.classList.toggle("mode-active", isUrl);
+  modeMessageBtn.classList.toggle("mode-active", !isUrl);
+  modeUrlBtn.setAttribute("aria-selected", String(isUrl));
+  modeMessageBtn.setAttribute("aria-selected", String(!isUrl));
+  idleHint.textContent = isUrl
+    ? "Enter a URL above to check it for phishing indicators."
+    : "Paste a text message above to check it for smishing.";
+  clearValidation();
+  showState("idle");
+}
+
+// ─── Render results ──────────────────────────────────────────────────────────
+
+function renderUrlResult(data) {
+  const view = Logic.describeUrlResult(data);
+
+  resultBadge.className = `badge ${view.badgeClass}`;
+  resultBadge.textContent = view.badgeLabel;
+  resultDomain.textContent = typeof data.domain === "string" ? data.domain : "";
+
+  detailHttps.hidden = false;
+  detailIp.hidden = false;
+  detailHttpsVal.textContent = data.https ? "Yes" : "No";
+  detailHttpsVal.className = `pill ${data.https ? "pill-yes" : "pill-no"}`;
+  detailIpVal.textContent = data.uses_ip ? "Yes" : "No";
+  detailIpVal.className = `pill ${data.uses_ip ? "pill-no" : "pill-yes"}`;
+  modelMsg.hidden = true;
+
+  blockchainSec.hidden = false;
+  blockchainSec.className = `blockchain-section ${
+    data.blockchain_available !== true ? "blockchain-unavailable"
+      : (data.blockchain_status ? data.blockchain_status === "match_threat" : data.blockchain_found)
+        ? "blockchain-found" : "blockchain-clear"}`;
+  blockchainMsg.textContent = view.registry;
+
+  renderFindings(data.findings.filter((f) => typeof f === "string"), "No heuristic issues detected.");
   showState("result");
 }
 
-// ─── Form submit ──────────────────────────────────────────────────────────────
+function renderMessageResult(data) {
+  const view = Logic.describeMessageResult(data);
+
+  resultBadge.className = `badge ${view.badgeClass}`;
+  resultBadge.textContent = view.badgeLabel;
+  resultDomain.textContent = view.explanation;
+
+  detailHttps.hidden = true;
+  detailIp.hidden = true;
+  modelMsg.textContent = [view.probabilities, view.modelVersion && `Model: ${view.modelVersion}`]
+    .filter(Boolean).join(" · ");
+  modelMsg.hidden = !modelMsg.textContent;
+
+  blockchainSec.hidden = false;
+  blockchainSec.className = `blockchain-section ${
+    data.registry.status === "match_threat" ? "blockchain-found"
+      : data.registry.status === "no_match" ? "blockchain-clear" : "blockchain-unavailable"}`;
+  blockchainMsg.textContent = view.registry;
+
+  renderFindings(view.findings, "No message warning signs detected by the simple checks.");
+  showState("result");
+}
+
+function renderError(err) {
+  errorMsg.textContent = (err && err.message) || "An unexpected error occurred. No result is available.";
+  if (err && (err.type === "network" || err.type === "timeout")) {
+    errorHint.textContent = `Make sure the server is running at ${BACKEND_URL}`;
+    errorHint.hidden = false;
+  } else {
+    errorHint.hidden = true;
+  }
+  showState("error");
+}
+
+// ─── Submit ───────────────────────────────────────────────────────────────────
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const url = urlInput.value.trim();
+  clearValidation();
 
-  // Client-side validation
-  validationMsg.hidden = true;
-  urlInput.classList.remove("input-error");
-
-  if (!url) {
-    validationMsg.textContent = "Please enter a URL.";
-    validationMsg.hidden = false;
-    urlInput.classList.add("input-error");
-    return;
-  }
-  if (!isValidUrl(url)) {
-    validationMsg.textContent = "Enter a URL starting with http:// or https://";
-    validationMsg.hidden = false;
-    urlInput.classList.add("input-error");
-    return;
+  let path;
+  let body;
+  if (mode === "url") {
+    const url = urlInput.value.trim();
+    if (!url) return showValidation("Please enter a URL.", urlInput);
+    if (!Logic.isValidUrl(url)) return showValidation("Enter a URL starting with http:// or https://", urlInput);
+    path = "/scan";
+    body = { url };
+  } else {
+    const problem = Logic.validateMessage(messageInput.value);
+    if (problem) return showValidation(problem, messageInput);
+    path = "/message/scan";
+    body = { text: messageInput.value };
   }
 
-  // Show loading
-  scanBtn.disabled = true;
-  scanBtn.textContent = "Scanning…";
-  urlInput.disabled = true;
+  setBusy(true);
   showState("loading");
-
   try {
-    const data = await callScanApi(url);
-    renderResult(data);
+    const data = await Logic.postJson(fetch, BACKEND_URL, path, body);
+    if (path === "/scan") renderUrlResult(data);
+    else renderMessageResult(data);
   } catch (err) {
-    errorMsg.textContent = err.message || "An unexpected error occurred.";
-    if (err.hint) {
-      errorHint.textContent = err.hint;
-      errorHint.hidden = false;
-    } else {
-      errorHint.hidden = true;
-    }
-    showState("error");
+    renderError(err);
   } finally {
-    scanBtn.disabled = false;
-    scanBtn.textContent = "Scan";
-    urlInput.disabled = false;
-    if (stateLoading) {
-      stateLoading.hidden = true;
-      stateLoading.setAttribute("hidden", "");
-      stateLoading.style.display = "none";
-    }
+    setBusy(false);
+    // Loading never outlives the request: a result or error state is always shown.
+    if (!stateLoading.hidden) showState("error");
   }
 });
 
+modeUrlBtn.addEventListener("click", () => setMode("url"));
+modeMessageBtn.addEventListener("click", () => setMode("message"));
+
 // ─── Initialise ───────────────────────────────────────────────────────────────
 
-// Show dashboard link if configured
 if (DASHBOARD_URL) {
   dashboardLink.href = DASHBOARD_URL;
   dashboardLink.hidden = false;
 }
 
-// Reset scan button and start in idle state
-scanBtn.disabled = false;
-scanBtn.textContent = "Scan";
-urlInput.disabled = false;
-showState("idle");
+setBusy(false);
+setMode("url");

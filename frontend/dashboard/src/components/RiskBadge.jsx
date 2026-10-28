@@ -11,6 +11,8 @@ const RISK_MAP = {
   SAFE:    { label: "Safe",    cls: "badge-safe",    icon: "✓" },
   MEDIUM:  { label: "Medium",  cls: "badge-medium",  icon: "!" },
   HIGH:    { label: "High",    cls: "badge-high",    icon: "✕" },
+  // LOW is used by message scans: a low-risk model prediction, never "safe".
+  LOW: { label: "Low risk", cls: "badge-safe", icon: "·" },
   UNKNOWN: { label: "Unknown", cls: "badge-unknown", icon: "?" },
 };
 

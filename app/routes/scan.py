@@ -1,12 +1,13 @@
-
 import logging
+from urllib.parse import urlparse
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.schemas.scan import ScanRequest, ScanResponse
 from app.services.url_processor import process_url
 from app.services.blockchain_checker import check_blockchain_threat
+from app.services.ml_detector import predict_phishing
 from app.services.security_checker import (
     check_url_security,
     calculate_risk_level,
@@ -17,6 +18,145 @@ from app.database.dependencies import get_db
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+DECISION_BLOCKCHAIN = "blockchain"
+DECISION_ML = "ml"
+DECISION_UNAVAILABLE = "unavailable"
+
+ML_STATUS_NOT_RUN = "not_run"
+ML_STATUS_ERROR = "error"
+ML_STATUS_OK = "ok"
+
+# The URL model is advisory: on its own it can raise risk to MEDIUM, never HIGH.
+# Evidence: its training data has a fixed template for legitimate URLs (see
+# docs/datasets.md), so a "phishing" prediction is not reliable enough for HIGH.
+ML_PHISHING_ADVISORY = "URL model predicts phishing (advisory; not a confirmed threat)"
+
+REGISTRY_UNAVAILABLE_NOTE = (
+    "Threat registry unavailable and no threat signal found; result is inconclusive, "
+    "not safe (unavailable service, not threat evidence)"
+)
+
+PATH_OR_QUERY_NOTE = (
+    "URL has a path or query string; the URL model was trained on "
+    "data where legitimate URLs never have one, so its prediction "
+    "for this URL is unreliable"
+)
+
+
+def _unavailable_blockchain_result(error: str | None = None) -> dict:
+    return {
+        "status": "unavailable",
+        "available": False,
+        "found": False,
+        "verdict": None,
+        "threat_type": None,
+        "confidence": None,
+        "error": error,
+    }
+
+
+def _lookup_blockchain(url: str) -> dict:
+    """Read-only registry lookup. Never raises."""
+    try:
+        return check_blockchain_threat(url)
+    except Exception:
+        logger.exception("Unexpected blockchain lookup failure")
+        return _unavailable_blockchain_result("Blockchain lookup failed")
+
+
+def _has_path_or_query(url: str) -> bool:
+    parsed = urlparse(url)
+    return bool(parsed.path.strip("/") or parsed.query)
+
+
+def _build_scan_result(url: str) -> dict:
+    processed_url = process_url(url)
+    security_result = check_url_security(url)
+    findings = list(security_result["findings"])
+
+    blockchain_result = _lookup_blockchain(url)
+    blockchain_threat = (
+        blockchain_result.get("available", False)
+        and blockchain_result.get("found", False)
+        and blockchain_result.get("verdict") == 1
+    )
+
+    ml_result = {
+        "available": False,
+        "probability": None,
+        "label": None,
+        "model_name": None,
+        "error": None,
+    }
+
+    if blockchain_threat:
+        # A confirmed registry match is decisive; the model is not consulted.
+        decision_source = DECISION_BLOCKCHAIN
+        ml_status = ML_STATUS_NOT_RUN
+        findings.append("Blockchain registry identifies this URL as a threat")
+        risk_level = "HIGH"
+        message = "URL matched a known threat in the blockchain registry"
+    else:
+        # Registry miss or registry unavailable: fall back to the model.
+        ml_result = predict_phishing(url)
+
+        if ml_result["available"]:
+            decision_source = DECISION_ML
+            ml_status = ML_STATUS_OK
+            # Heuristics set the base level (computed before advisory notes are added).
+            risk_level = calculate_risk_level(findings)
+            if ml_result["label"] == "phishing":
+                if risk_level == "SAFE":
+                    risk_level = "MEDIUM"
+                findings.append(ML_PHISHING_ADVISORY)
+            message = "URL processed; URL model prediction is advisory, not a confirmed threat"
+            # SAFE needs the registry check. With the registry unavailable, "no heuristic
+            # findings + advisory model says legitimate" is not enough reassurance, so the
+            # result is UNKNOWN. This only ever withholds SAFE; it never lowers a risk level.
+            if risk_level == "SAFE" and not blockchain_result.get("available", False):
+                risk_level = "UNKNOWN"
+                findings.append(REGISTRY_UNAVAILABLE_NOTE)
+            if _has_path_or_query(url):
+                findings.append(PATH_OR_QUERY_NOTE)
+        else:
+            # A failed model must never be reported as SAFE.
+            decision_source = DECISION_UNAVAILABLE
+            ml_status = ML_STATUS_ERROR
+            risk_level = "UNKNOWN"
+            message = (
+                "URL processed; URL model unavailable, result is not a "
+                "safety verdict"
+            )
+
+    if not blockchain_result.get("available", False):
+        message += "; blockchain registry unavailable during this scan"
+
+    return {
+        "url": url,
+        "status": "processed",
+        "message": message,
+        "protocol": processed_url["protocol"],
+        "domain": processed_url["domain"],
+        "path": processed_url["path"],
+        "https": security_result["https"],
+        "uses_ip": security_result["uses_ip"],
+        "risk_level": risk_level,
+        "findings": findings,
+        "decision_source": decision_source,
+        "blockchain_available": blockchain_result.get("available", False),
+        "blockchain_found": blockchain_result.get("found", False),
+        "blockchain_error": blockchain_result.get("error"),
+        # Explicit registry outcome. blockchain_found keeps its original meaning
+        # (hash registered, any verdict); only match_threat means a known threat.
+        "blockchain_status": blockchain_result.get("status", "unavailable"),
+        "ml_status": ml_status,
+        "ml_available": ml_result["available"],
+        "ml_probability": ml_result["probability"],
+        "ml_label": ml_result["label"],
+        "ml_model_name": ml_result["model_name"],
+        "ml_error": ml_result["error"],
+    }
+
 
 @router.post("/scan", response_model=ScanResponse)
 def scan_url(
@@ -25,88 +165,28 @@ def scan_url(
 ):
     logger.info("Scan request received")
 
+    url = str(request.url)
+
     try:
-        url = str(request.url)
-
-        # Process URL
-        processed_url = process_url(url)
-
-        # Perform normal security checks
-        security_result = check_url_security(url)
-
-        # Read-only blockchain lookup; normal scanning must continue
-        # even if the blockchain service unexpectedly fails.
-        blockchain_result = {
-            "available": False,
-            "found": False,
-            "verdict": None,
-            "threat_type": None,
-            "confidence": None,
-            "error": None,
-        }
-
-        try:
-            blockchain_result = check_blockchain_threat(url)
-        except Exception:
-            logger.exception("Unexpected blockchain lookup failure")
-
-        # Add a finding only when the registry confirms a threat
-        if (
-            blockchain_result.get("available", False)
-            and blockchain_result.get("found", False)
-            and blockchain_result.get("verdict") == 1
-        ):
-            security_result["findings"].append(
-                "Blockchain registry identifies this URL as a threat"
-            )
-
-        # Calculate risk level
-        risk_level = calculate_risk_level(
-            security_result["findings"]
-        )
-
-        # Create scan result
-        result = {
-            "url": url,
-            "status": "processed",
-            "message": "URL processed successfully",
-            "protocol": processed_url["protocol"],
-            "domain": processed_url["domain"],
-            "path": processed_url["path"],
-            "https": security_result["https"],
-            "uses_ip": security_result["uses_ip"],
-            "risk_level": risk_level,
-            "findings": security_result["findings"],
-            "blockchain_available": blockchain_result.get(
-                "available", False
-            ),
-            "blockchain_found": blockchain_result.get(
-                "found", False
-            ),
-        }
-
-        # Save scan result to database
-        save_scan(db, result)
-
-        return result
-
+        result = _build_scan_result(url)
     except Exception:
         logger.exception("Error while processing URL")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while processing the URL",
+        )
 
-        return {
-            "url": str(request.url),
-            "status": "error",
-            "message": "An error occurred while processing the URL",
-            "protocol": "",
-            "domain": "",
-            "path": "",
-            "https": False,
-            "uses_ip": False,
-            "risk_level": "UNKNOWN",
-            "findings": [],
-            "blockchain_available": False,
-            "blockchain_found": False,
-        }
+    # Persistence failures are reported explicitly; the scan result is still returned.
+    try:
+        save_scan(db, result)
+        result["persisted"] = True
+    except Exception:
+        logger.exception("Failed to persist scan result")
+        db.rollback()
+        result["persisted"] = False
+        result["message"] += "; result could not be saved to history"
+
+    return result
 
 
 @router.get("/scan/history")

@@ -1,0 +1,14 @@
+.messages-page { display: flex; flex-direction: column; gap: 16px; }
+.messages-form { display: flex; flex-direction: column; gap: 8px; }
+.messages-input { width: 100%; resize: vertical; min-height: 110px; font-family: inherit; }
+.messages-actions { display: flex; justify-content: space-between; align-items: center; }
+.message-result { display: flex; flex-direction: column; gap: 10px; }
+.message-result-header { display: flex; align-items: center; gap: 10px; }
+.message-result-title { margin: 0; font-size: 1.1rem; }
+.message-section h3 { margin: 0 0 4px; font-size: 0.95rem; }
+.message-section ul { margin: 0; padding-left: 1.2rem; }
+.message-scores { list-style: none; padding-left: 0 !important; display: flex; gap: 16px; flex-wrap: wrap; }
+.message-note { margin: 0; font-size: 0.85rem; opacity: 0.75; }
+.messages-history-title { margin-top: 12px; margin-bottom: 0; }
+.messages-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.messages-table th, .messages-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(127, 127, 127, 0.25); }

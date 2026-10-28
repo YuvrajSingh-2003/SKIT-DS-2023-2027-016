@@ -138,9 +138,9 @@ export default function HistoryPage() {
 
       {/* ── Note about blockchain fields ── */}
       <p className="history-note">
-        <strong>Note:</strong> Blockchain registry status is not stored in the
-        database and is not shown in history. Run a fresh scan to see blockchain
-        results for a URL.
+        <strong>Note:</strong> Registry status is shown as it was recorded at scan
+        time. Scans saved before registry statuses were stored show "not recorded"
+        or an unclassified registry entry, never a confirmed threat.
       </p>
 
       {/* ── Loading ── */}

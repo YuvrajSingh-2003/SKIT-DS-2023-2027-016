@@ -107,9 +107,10 @@ export async function scanUrl(url, baseUrl = DEFAULT_BASE_URL) {
  * GET /scan/history
  * Retrieve all previously scanned URLs from the database.
  *
- * NOTE: History records do NOT include blockchain_available / blockchain_found
- * because those fields are not persisted to the database. Do not attempt to
- * display them from history entries.
+ * History records include blockchain_available, blockchain_found and
+ * blockchain_status. Use blockchain_status: only "match_threat" is a known threat.
+ * Older rows report "not_recorded" or "match_unclassified" (entry existed, verdict
+ * not recorded), which must not be shown as threats.
  *
  * History item shape:
  * {
@@ -131,4 +132,33 @@ export async function scanUrl(url, baseUrl = DEFAULT_BASE_URL) {
  */
 export async function getScanHistory(baseUrl = DEFAULT_BASE_URL) {
   return apiFetch("/scan/history", { method: "GET" }, baseUrl);
+}
+
+/**
+ * POST /message/scan
+ * Classify an SMS/message. The text is sent only when the user presses Scan.
+ *
+ * MessageScanResponse shape (backend app/schemas/message.py):
+ * {
+ *   status: "processed",
+ *   verdict: "smishing_registry_match" | "likely_smishing" | "generic_spam" | "likely_legitimate" | "unavailable",
+ *   risk_level: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN",   // never "SAFE"
+ *   decision_source: "blockchain" | "ml" | "unavailable",
+ *   message: string,
+ *   model: { status: "ok" | "error", label, probabilities, model_version, model_name, error },
+ *   registry: { status: "match_threat" | "match_non_threat" | "no_match" | "unavailable", error },
+ *   findings: string[], limitations: string[], message_length: number,
+ *   scan_id: number | null, persisted: boolean,
+ * }
+ */
+export async function scanMessage(text, baseUrl = DEFAULT_BASE_URL) {
+  return apiFetch("/message/scan", { method: "POST", body: JSON.stringify({ text }) }, baseUrl);
+}
+
+/**
+ * GET /message/history
+ * Metadata only (verdict, model scores, registry status, length). No message text is stored.
+ */
+export async function getMessageHistory(baseUrl = DEFAULT_BASE_URL) {
+  return apiFetch("/message/history", { method: "GET" }, baseUrl);
 }

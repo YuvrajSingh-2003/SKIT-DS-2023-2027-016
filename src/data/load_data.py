@@ -1,11 +1,20 @@
 """Load the raw smish dataset and standardize column names."""
+import logging
+
 import pandas as pd
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 RAW_PATH = Path("data/raw/smish.csv")
 
+# How rows with a missing or blank text or label are handled.
+#   "raise": refuse to load (default; nothing is dropped silently)
+#   "drop":  drop them, logging the counts
+MISSING_POLICIES = ("raise", "drop")
 
-def load_raw(path: Path = RAW_PATH) -> pd.DataFrame:
+
+def load_raw(path: Path = RAW_PATH, missing: str = "raise") -> pd.DataFrame:
     if not path.exists():
         raise FileNotFoundError(
             f"{path} not found. Place your smish.csv into data/raw/ first."
@@ -29,9 +38,27 @@ def load_raw(path: Path = RAW_PATH) -> pd.DataFrame:
             f"Edit load_data.py to map them manually."
         )
 
+    if missing not in MISSING_POLICIES:
+        raise ValueError(f"missing must be one of {MISSING_POLICIES}, got {missing!r}")
+
     df = df[[text_col, label_col]].rename(columns={text_col: "text", label_col: "label"})
-    df = df.dropna(subset=["text", "label"]).reset_index(drop=True)
-    return df
+
+    # A value is missing if it is absent or blank after stripping whitespace.
+    text_missing = df["text"].isna() | df["text"].astype(str).str.strip().eq("")
+    label_missing = df["label"].isna() | df["label"].astype(str).str.strip().eq("")
+    any_missing = text_missing | label_missing
+
+    if any_missing.any():
+        summary = (
+            f"{int(any_missing.sum())} of {len(df)} rows have a missing or blank text "
+            f"({int(text_missing.sum())}) or label ({int(label_missing.sum())})"
+        )
+        if missing == "raise":
+            raise ValueError(f"{summary}. Pass missing='drop' to drop them explicitly.")
+        logger.warning("Dropping rows: %s", summary)
+        df = df[~any_missing]
+
+    return df.reset_index(drop=True)
 
 
 if __name__ == "__main__":

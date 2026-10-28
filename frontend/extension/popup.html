@@ -17,14 +17,24 @@
       </svg>
       <div class="header-text">
         <span class="header-name">ChainShield</span>
-        <span class="header-sub">URL Threat Detector</span>
+        <span class="header-sub">URL &amp; SMS Threat Detector</span>
       </div>
     </header>
 
     <!-- ── Scanner form ───────────────────────────────────── -->
     <main class="main">
+      <div class="mode-row" role="tablist" aria-label="Scan type">
+        <button type="button" id="mode-url" class="mode-btn mode-active" role="tab" aria-selected="true">URL</button>
+        <button type="button" id="mode-message" class="mode-btn" role="tab" aria-selected="false">Message</button>
+      </div>
       <form id="scan-form" novalidate>
-        <div class="input-row">
+        <div id="message-row" class="message-row" hidden>
+          <label for="message-input" class="sr-only">Message to scan</label>
+          <textarea id="message-input" class="input message-input" rows="4" maxlength="2000"
+                    placeholder="Paste a text message here" spellcheck="false"></textarea>
+          <button type="submit" class="btn btn-primary" id="scan-message-btn">Scan message</button>
+        </div>
+        <div class="input-row" id="url-row">
           <label for="url-input" class="sr-only">URL to scan</label>
           <input
             id="url-input"
@@ -43,7 +53,7 @@
 
       <!-- ── States ─────────────────────────────────────── -->
       <div id="state-idle"    class="state state-idle">
-        <p class="idle-hint">Enter a URL above to check it for phishing indicators.</p>
+        <p class="idle-hint" id="idle-hint">Enter a URL above to check it for phishing indicators.</p>
       </div>
 
       <div id="state-loading" class="state state-loading" hidden aria-busy="true" aria-label="Scanning…">
@@ -73,6 +83,9 @@
           <span id="detail-ip-val" class="pill"></span>
         </div>
 
+        <!-- Message model details -->
+        <p id="model-msg" class="model-msg" hidden></p>
+
         <!-- Blockchain -->
         <div id="blockchain-section" class="blockchain-section" hidden>
           <p id="blockchain-msg" class="blockchain-msg"></p>
@@ -91,7 +104,7 @@
 
         <!-- Disclaimer -->
         <p class="disclaimer">
-          Results are informational. A clean result does not guarantee safety.
+          Results are informational and can be wrong. A clean result does not guarantee safety.
         </p>
       </div>
     </main>
@@ -104,6 +117,7 @@
       <span class="footer-name">ChainShield · v0.1.0</span>
     </footer>
 
+    <script src="src/logic.js"></script>
     <script src="src/popup.js"></script>
   </body>
 </html>
