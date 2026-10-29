@@ -255,3 +255,52 @@ def test_acceptance_criteria_are_declared_and_require_real_data():
                           .read_text())["criteria"]
     assert criteria["phishing_recall_drop_max_pp"] <= 1.0
     assert "REQUIRED" in criteria["real_off_template_legitimate_eval"]
+
+
+# ── multi-source pipeline (PhiUSIIL + Hannousse & Yahiouche 2021) ─────
+
+def test_registrable_domain_approximation():
+    from src.training.train_url_multisource import registrable_domain
+
+    assert registrable_domain("https://www.example.com/a") == "example.com"
+    assert registrable_domain("http://shop.example.co.uk/") == "example.co.uk"
+    assert registrable_domain("https://a.b.github.io/") == "github.io"
+    assert registrable_domain("example.org") == "example.org"
+
+
+def test_shape_groups():
+    from src.training.train_url_multisource import shape_groups
+
+    assert shape_groups("https://www.example.com/")["in_template"]
+    bare = shape_groups("https://example.com/")
+    assert bare["bare_root"] and bare["no_www"] and not bare["in_template"]
+    assert shape_groups("http://www.example.com/")["http"]
+    assert shape_groups("https://www.example.com/?q=1")["path_or_query"]
+
+
+def test_hannousse_split_is_domain_disjoint_and_checksummed():
+    from src.training import train_url_multisource as ms
+
+    if not ms.HANNOUSSE.is_file():
+        pytest.skip("Hannousse dataset not present")
+    splits, report = ms.load_hannousse()       # raises on checksum mismatch
+    assert report["label_conflict_urls_dropped"] == 0
+    assert all(count == 0 for count in report["group_overlap_between_splits"].values())
+    assert sum(report["rows_by_split"].values()) == report["rows"] - report["exact_duplicates_dropped"]
+    for name, frame in splits.items():
+        assert set(frame["phishing"]) == {0, 1}, name
+
+
+def test_production_model_flags_real_off_template_legitimate_urls():
+    """Characterizes the pinned model on REAL held-out legitimate URLs that are
+    not https://www.<host> (Hannousse validation split): it flags almost all."""
+    from src.training import train_url_multisource as ms
+
+    model = _real_model_or_skip()
+    if not ms.HANNOUSSE.is_file():
+        pytest.skip("Hannousse dataset not present")
+    validation = ms.load_hannousse()[0]["validation"]
+    legit = validation[validation["phishing"] == 0]
+    off = legit[[not ms.shape_groups(u)["in_template"] for u in legit["url"]]]
+    flagged = (model.predict_proba(ms.features(off["url"], False))[:, 1] >= 0.5).mean()
+    assert len(off) > 500 and flagged > 0.9

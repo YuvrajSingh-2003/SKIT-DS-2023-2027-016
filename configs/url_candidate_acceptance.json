@@ -15,5 +15,21 @@
   "rationale": {
     "recall": "The model is the only signal for phishing that lacks heuristic findings; a recall loss above 1 pp on 15,078 validation phishing URLs (~150 URLs) is not justified by a false-positive fix that cannot be measured on real data.",
     "real_data": "No local, licensed dataset contains legitimate URLs outside https://www.<host> (0 of 134,850 in raw PhiUSIIL). Until one exists, no candidate can satisfy the last criterion, so no candidate can be promoted."
+  },
+  "addendum_2026_10_29_b": {
+    "_comment": "Declared BEFORE any candidate was trained on the new data and BEFORE the baseline was scored on it. Specifies the previously unquantified real_off_template_legitimate_eval criterion and adds gates; no existing criterion is changed or loosened.",
+    "real_eval_source": "Hannousse & Yahiouche 2021 (Mendeley 10.17632/c2gw7fy2j4.3, CC BY 4.0), registrable-domain-grouped held-out split",
+    "off_template_legitimate_fpr_max": 0.05,
+    "per_shape_legitimate_fpr_max": 0.05,
+    "per_shape_groups": [
+      "bare_root (no www., root path)",
+      "no_www (any path)",
+      "http",
+      "path_or_query"
+    ],
+    "per_shape_min_rows_to_gate": 30,
+    "real_eval_phishing_f1_not_below_baseline": true,
+    "high_risk_regression": "known high-risk test URLs keep HIGH in the scan route; real-model tests unchanged",
+    "selection_on": "validation splits only (PhiUSIIL stratified_validation + Hannousse grouped validation); test splits scored once, only for a candidate that passes every validation gate"
   }
 }

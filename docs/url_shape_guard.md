@@ -288,3 +288,85 @@ Licensed legitimate URLs covering bare apex, non-`www` subdomains, `http`, paths
 - retrain with a host-grouped split;
 - evaluate on a time-stamped holdout;
 - pass every criterion above.
+
+## Retraining with representative data (2026-10-29, second attempt)
+
+### Data found
+
+- **Dataset:** Hannousse & Yahiouche 2021, "Web page phishing detection" (Mendeley
+  10.17632/c2gw7fy2j4.3, **CC BY 4.0**). See `data/raw/hannousse_2021/SOURCE.md`.
+- **Legitimate URLs** include:
+  - 1,898 without `www.`;
+  - 3,172 on `http`;
+  - 3,520 with a path or query;
+  - 626 bare root domains.
+- **Hygiene:** 1 duplicate, 0 label conflicts.
+- **Split:**
+  - Grouped by registrable domain: 8,027 train / 1,701 validation / 1,701 test. 0 shared domains
+    between splits.
+  - 1,744 Hannousse training rows were dropped because their domain occurs in PhiUSIIL
+    validation/test.
+  - 388 Hannousse validation rows share a domain with PhiUSIIL train. These are reported separately
+    as "seen domains"; the unseen-domain metrics exclude them.
+  - No time-based holdout is possible: neither source has per-row dates.
+
+### Acceptance
+
+- Criteria: `configs/url_candidate_acceptance.json`. The `addendum_2026_10_29_b` section was declared
+  before training. It sets real off-template legitimate FPR ≤ 5% overall and per shape group (n ≥ 30),
+  and real-data phishing F1 ≥ baseline.
+- All earlier criteria are unchanged.
+
+### Results
+
+Validation splits only. Command: `python -m src.training.train_url_multisource`. Results:
+`reports/model_optimization/results/url_multisource_validation.json`.
+
+PhiUSIIL validation (35,305 rows):
+
+| Model | Recall | Precision | FPR |
+|---|---|---|---|
+| production | 0.9421 | 0.9826 | 1.24% |
+| c5 PhiUSIIL+Hannousse | 0.9367 | 0.9838 | 1.15% |
+| c6 + www-neutral | 0.9636 | 0.9917 | 0.60% |
+| c7 source-balanced weights | 0.9077 | 0.9838 | 1.12% |
+| c8 Hannousse only | 0.5308 | 0.9498 | 2.09% |
+
+Hannousse validation (1,701 rows, real legitimate URLs; FPR in %):
+
+| Model | Off-template FPR (n=722) | Bare root (n=60) | No www (n=241) | http (n=503) | Path/query (n=555) | Phishing F1 |
+|---|---|---|---|---|---|---|
+| production | **98.2** | 78.3 | 94.6 | 100 | 100 | 0.689 |
+| c5 | 54.2 | 73.3 | 65.6 | 53.1 | 43.2 | 0.781 |
+| c6 | 59.8 | 65.0 | 64.3 | 58.7 | 51.5 | 0.781 |
+| c7 | 38.4 | 46.7 | 46.9 | 44.7 | 25.8 | 0.793 |
+| c8 | 12.6 | 6.7 | 23.2 | 13.3 | 15.5 | 0.804 |
+
+Gate: ≤ 5% FPR in every Hannousse column. Per-group Wilson 95% intervals are in the results JSON.
+
+### Decision: **no candidate accepted; production model unchanged**
+
+**Every candidate fails the real off-template FPR gate and the shape guard.**
+- Candidates that keep PhiUSIIL recall (c5, c6) still flag 54–60% of real off-template legitimate
+  URLs.
+- Candidates that reduce false positives lose recall beyond the predeclared limits: c7 −3.4 pp, and
+  c8 −41 pp on PhiUSIIL.
+- Even c8, trained only on representative data, flags 12.6% of real off-template legitimate URLs.
+
+**Conclusion:**
+- With the 19 production lexical features and about 3k real legitimate training URLs, no tested mix
+  meets the gates.
+- The remaining blocker is **both data volume and representation**, not just PhiUSIIL's template.
+- The locked test splits were not scored, because no candidate was eligible.
+- Tuning thresholds or weights further against validation would be selection on noise, so it was not
+  pursued.
+
+**What would be required next (not done):**
+- Substantially more licensed, recent, legitimate URLs with diverse shapes (≫ 3k).
+- A richer, still serving-compatible URL representation, e.g. character n-grams of host and path.
+  That needs a feature-schema change and its own parity tests.
+- The same gates.
+
+**New real-world evidence:** the production model flags **98.2%** of real held-out legitimate URLs
+that are not `https://www.<host>`. This confirms that the model's phishing label is unreliable for
+those shapes. The scan route keeps it advisory, with an explanatory note.

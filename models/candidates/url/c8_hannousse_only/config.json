@@ -1,0 +1,16 @@
+{
+  "normalization": "raw",
+  "training_mix": "hannousse",
+  "threshold": 0.5,
+  "seed": 42,
+  "estimator": "xgboost (production hyperparameters)",
+  "training_data": {
+    "phiusiil": "stratified_train.csv",
+    "hannousse_2021": "grouped train split",
+    "rows": 6283,
+    "phishing_rows": 2838
+  },
+  "hannousse_sha256": "21093e2902e5441c86a6daf95e86e7c332046e477fdf109a579d7bd81e586d6c",
+  "train_seconds": 0.3515467239994905,
+  "model_sha256": "2c9330cf5c044546058d37d745adf937d87a87e4507ad51fedca1ceb42da7384"
+}

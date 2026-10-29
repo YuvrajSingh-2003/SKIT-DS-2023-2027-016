@@ -309,3 +309,19 @@ Produced by `src/data/split_prepared.py` from the 5,762 prepared Mishra & Soni r
    locked test split) and PhiUSIIL label-0 URLs. They contain hashes and provenance only. The
    PhiUSIIL labels are historical (2024) and do not show that a URL is malicious today
    (data/threat_registry/REVIEW.md).
+
+### Web page phishing detection, Hannousse & Yahiouche 2021 (URL task, added 2026-10-29)
+
+- **Source:** Mendeley Data DOI 10.17632/c2gw7fy2j4.3. **License: CC BY 4.0** (stated on the
+  Mendeley page).
+- **File:** `data/raw/hannousse_2021/dataset_B_05_2020.csv`, SHA-256 `21093e29…6d6c`, committed with
+  attribution in `SOURCE.md`.
+- **Contents:** 11,430 URLs, balanced. Built May 2020.
+  - **Legitimate:** Alexa top-500 seed crawl plus Yandex-sourced URLs.
+  - **Phishing:** PhishTank and OpenPhish.
+- **Use:** training and evaluating URL-model candidates that cover the legitimate URL shapes absent
+  from PhiUSIIL: bare domains, `http`, paths and queries.
+- **Split:** by approximate registrable domain (`src/training/train_url_multisource.py`), 70/15/15.
+  Hannousse training rows whose domain appears in PhiUSIIL validation/test are dropped.
+- **Limitations:** a 2020 snapshot with no per-row timestamps (no time-based holdout). Legitimate
+  labels come from popularity/crawl provenance, not per-URL verification.
