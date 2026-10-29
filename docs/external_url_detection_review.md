@@ -160,3 +160,114 @@ The H1/L1/L2 arms are **not implemented** yet. External repositories' own comman
 - https://github.com/gangeshbaskerr/Phishing-Website-Detection
 - https://github.com/rajeswari-30/phishdriftbench
 - https://www.unb.ca/cic/datasets/url-2016.html (ISCX-URL2016 description; no licence stated)
+
+---
+
+# Round 2: additional repositories (2026-10-29)
+
+**Selection:** from `gh search repos` ("URLNet", "phishing url detection"), chosen to cover gaps left
+by round 1:
+
+| Repository | Gap covered |
+|---|---|
+| R5 URLNet | Character-level representation |
+| R6 DEPHIDES | Large legitimate corpus with paths; also the source of the Yandex URLs inside Hannousse |
+| R7 URLTran | Transformer representation |
+| R8 vaibhavbichave | Most-starred result; common practice |
+
+**Method:** same as round 1. Shallow clone outside this repository; read as text. **No code executed,
+no models or `__pycache__` loaded.** The DEPHIDES text files were read with pandas for
+shape/overlap statistics. Those statistics come from our own reading of their committed data and are
+**[measured by us]**.
+
+| # | Repository | Commit | Licence |
+|---|---|---|---|
+| R5 | [Antimalweb/URLNet](https://github.com/Antimalweb/URLNet) | `0f0a92c` (2021-01-12) | **Apache-2.0** (`LICENSE`) |
+| R6 | [ebubekirbbr/dephides](https://github.com/ebubekirbbr/dephides) | `e66ef86` (2024-07-30) | **MIT** (`LICENSE`) for the repository. The dataset is derived from Common Crawl and PhishTank, whose upstream terms still apply; **not verified for redistribution** |
+| R7 | [bfilar/URLTran](https://github.com/bfilar/URLTran) | `d82a2f2` (2022-08-24) | **None found** → do not copy |
+| R8 | [vaibhavbichave/Phishing-URL-Detection](https://github.com/vaibhavbichave/Phishing-URL-Detection) | `c25eae0` (2022-09-22) | **None found** → do not copy |
+
+## R1. Comparison
+
+| Aspect | R5 URLNet | R6 DEPHIDES | R7 URLTran | R8 vaibhavbichave |
+|---|---|---|---|---|
+| **Representation** | Char-level + word-level + char-in-word CNN embeddings over the **raw full URL**: `char_id_x(urls, …)` reads the unmodified string, scheme and `www.` included [code: `utils.py`, `train.py`]. A `split_url` helper strips scheme/`www.` but is not used for the char input [code] | Char-level deep models (`src/`) [README]; not inspected in depth | BERT WordPiece tokens over the raw URL, `max_length=128` [code: `data_prep.py`] | 30 ternary features from the old UCI "Phishing Websites" set [data: `phishing.csv`] |
+| **Network at inference** | None | None [README] | None | **Yes:** `requests.get(url)`, `whois.whois`, `googlesearch`, Alexa API [code: `feature.py`] |
+| **`www.` / HTTPS / path** | All visible to the model as characters | All visible | All visible | Hand features (`Hppts`, `SubDomains`, …) |
+| **Train/serve parity** | Same tokenization code; dictionaries saved with the model [README, code] | Not verified | Same tokenizer [code] | **None:** trains on precomputed UCI features, serves with its own live-fetch reimplementation [code vs data] |
+| **Data** | None shipped; format `label<TAB>url` [README] | **5,202,841 URLs** (big; Google Drive on request) / **520,285** (small, committed). Legitimate from **Common Crawl** (URLs on top-100k CC domains, `dataset/top100k_cc.txt`), phishing from **PhishTank** [README] | Benign = Alexa top-50k *domains* + the author's **personal Chrome history** (60k); malicious = OpenPhish/PhishTank/Phishing.Database [README] | UCI 2015-era dataset (11k rows), no URLs |
+| **Shape profile** | n/a | Small dataset, 60k-row sample [measured by us]: legitimate HTTPS **66.5%** vs phishing **2.3%**; `www.` 72.1% vs 28.2%; root-only 1.7% vs 6.8%. Every row has a scheme | Bare legitimate domains vs full phishing URLs → path/shape shortcut by construction | n/a |
+| **Dedup / conflicts** | none | 502 duplicate URLs in 520,284 rows, 0 label conflicts [measured by us] | none | none |
+| **Split / domain overlap** | **Random per-class split**, `np.random.seed(10)` [code: `utils.py::prep_train_test`] | Given 70/20/10 split; **77% of test rows share a registrable domain (last two labels) with train** [measured by us] | `train_test_split` random [code] | random (notebook) |
+| **Temporal validation** | No | No (no per-row dates in the files) | No | No |
+| **Metrics reported** | AUC [README, `auc.py`] | Accuracy/precision/recall per architecture [README, `test_results/`; not re-run] | Paper-reported [README] | Accuracy [README] |
+
+## R2. Techniques worth adapting (reimplement)
+
+| # | Technique | Source | Adaptation |
+|---|---|---|---|
+| A10 | **Character-in-word (subword) features over host and path tokens, separately** | R5 `utils.py::ngram_id_x`, `get_words` (Apache-2.0; would need NOTICE if copied; reimplement instead) | A gradient-boosting-compatible version: hashed char 3–5-grams of the **canonical host** and, separately, of the **path tokens**. Our `url_feature_investigation.md` deferred n-grams because of data volume; R6 could change that (see A11). Must keep the A1 host-invariance test and the PhiUSIIL path masking (L2), or n-grams will learn `https://www.` even faster than the 19 lexical features. |
+| A11 | **Large legitimate-with-path corpus from Common Crawl, seeded by top CC domains** | R6 `dataset/`, `top100k_cc.txt` | A candidate source for the volume gap (≫ 13k legitimate URLs). Before use: **(1)** verify Common Crawl and PhishTank terms for this derived redistribution; **(2)** re-split by PSL eTLD+1 (their split leaks 77% of test domains); **(3)** treat the scheme as confounded (66.5% vs 2.3% HTTPS) → mask `IsHTTPS`/scheme features for R6 rows, as for PhiUSIIL; **(4)** report shape profiles per source; **(5)** popularity-proxy labels only. |
+| A12 | **Saved tokenization dictionaries as part of the model artifact** | R5 [README] | For any n-gram arm: hash function and n-gram spec go into `metadata.json` and the feature-spec hash (A5). |
+
+## R3. Do not copy
+
+| Technique | Where | Why |
+|---|---|---|
+| Raw full-URL char/token models trained on shape-confounded sources | R5, R7 | The highest-capacity representation amplifies the PhiUSIIL/Tranco shortcut. Our evidence shows the shortcut is distributed across many features; characters encode it directly. |
+| Personal browser history as "benign" data | R7 README | Personal data, not reproducible, and selection-biased. Also incompatible with ChainShield's privacy stance. |
+| Live fetch / WHOIS / search lookups at inference | R8 `feature.py` | Contacts the target, non-deterministic, and the Alexa API is dead. Same as R3 in round 1. |
+| Training on precomputed third-party features and serving a reimplementation | R8 | No parity guarantee: the train/serve skew our tests exist to prevent. |
+| Using R6's published split as is | R6 | 77% domain overlap train→test inflates results. |
+| Copying R7/R8 code | — | No licence. |
+
+## R4. Effect on the proposed experiment (§4)
+
+- **No change to B0/H1/L1/L2** or to the unchanged acceptance criteria.
+- **Optional data arm L2+D** (only after the licence check in A11): L2 trained additionally on
+  DEPHIDES-small, re-split by PSL eTLD+1, with scheme features masked for those rows. Evaluated on the
+  **same** Hannousse and PhiUSIIL validation rows as every other arm. DEPHIDES held-out rows are a
+  third, separately reported validation set.
+- **Optional representation arm N1** (after L2+D, only if L2+D still misses the gates): A10 hashed
+  host/path char n-grams with the same masking. Deferred because it changes the serving feature schema
+  the most.
+
+**Additional risks:**
+- DEPHIDES legitimate URLs are "on popular CC domains", not verified safe.
+- Its PhishTank rows are older and mostly `http`.
+- Adding it shifts the training mix heavily (520k vs 171k rows), so report per-source weights.
+- The big dataset is not in the repository (Google Drive on request) and was **not** requested.
+
+## R5. Reproduction (inspection only)
+
+```bash
+D=$(mktemp -d)
+for r in Antimalweb/URLNet ebubekirbbr/dephides bfilar/URLTran vaibhavbichave/Phishing-URL-Detection; do
+  git clone --depth 1 "https://github.com/$r.git" "$D/$(echo $r | tr / _)"
+done
+less "$D/Antimalweb_URLNet/utils.py"                 # char_id_x / prep_train_test
+less "$D/vaibhavbichave_Phishing-URL-Detection/feature.py"   # live requests/whois at inference
+python -I - "$D/ebubekirbbr_dephides/dataset/small_dataset" <<'PY'
+import sys, pandas as pd
+from urllib.parse import urlsplit
+rows = []
+for split in ("train", "val", "test"):
+    for line in open(f"{sys.argv[1]}/{split}.txt", encoding="utf-8", errors="replace"):
+        label, _, url = line.rstrip("\n").partition("\t")
+        if url: rows.append((split, label, url))
+d = pd.DataFrame(rows, columns=["split", "label", "url"])
+host = d.url.map(lambda u: urlsplit(u).hostname or "" if "[" not in u else "")
+reg = host.str.split(".").str[-2:].str.join(".")
+print(d.groupby("label").url.apply(lambda s: s.str.startswith("https").mean()))   # full set: legitimate 0.666, phishing 0.022 (table: 60k sample)
+print(reg[d.split == "test"].isin(set(reg[d.split == "train"])).mean())            # 0.770
+PY
+```
+
+Nothing from R5–R8 was executed. The R6 big dataset was not downloaded.
+
+### Round 2 sources
+
+- https://github.com/Antimalweb/URLNet
+- https://github.com/ebubekirbbr/dephides
+- https://github.com/bfilar/URLTran
+- https://github.com/vaibhavbichave/Phishing-URL-Detection
