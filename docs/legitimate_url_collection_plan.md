@@ -279,3 +279,73 @@ without S7. That must be reported, not padded.
 - https://majestic.com/reports/majestic-million
 - https://tranco-list.eu/
 - https://commoncrawl.org/terms-of-use (via `docs/dephides_licence_audit.md`)
+
+## 10. Phase 0 record (2026-10-29)
+
+### 10a. Licence texts confirmed
+
+| Item | Result |
+|---|---|
+| S2 `cisagov/dotgov-data` LICENSE | **CC0 1.0 Universal** (full legal code). LICENSE SHA-256 `a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499`; repository pinned at commit `b80a2cc9f1e07893d6df7203a39e199d81622603` |
+| S3 Open Government Licence v3.0 ([text](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/)) | Free to "copy, publish, distribute and transmit" and "adapt"; **commercial exploitation permitted**. Attribution: "Contains public sector information licensed under the Open Government Licence v3.0" (or the provider's own statement). **Does not cover** personal data, third-party rights the provider cannot license, or logos/crests. Matches §7 (no personal data; URL strings only) |
+
+### 10b. Phishing-source audit
+
+A phishing source is needed so that new legitimate data is not paired only with 2019–2024 phishing.
+
+| # | Source | Terms (retrieved 2026-10-29) | Label quality | Status |
+|---|---|---|---|---|
+| P1 | PhishTank | [FAQ](https://phishtank.org/faq.php): data is shared; commercial and non-commercial API use "is OK". The site's Terms link is the Cisco General Terms (§2.2: no sublicensing or derivative works of "Cisco Offers"; PhishTank not mentioned). Application key required | Community-verified (`verified` flag, per-row `submission_time`) | **Blocked: request written clarification** from PhishTank/Cisco covering storage, model training and non-redistribution |
+| P2 | OpenPhish community | [Terms](https://openphish.com/terms.html): personal or academic research only; no "detection … product development"; no redistribution | Automated | **Blocked for training/product use**; existing snapshot stays report-only |
+| P3 | PhishStats | [Terms](https://phishstats.info/terms) §10: "limited, non-exclusive, non-transferable, revocable license … for lawful security research, threat intelligence". §5: no redistribution of raw feeds without written permission. ML not mentioned. Anonymous access capped at 50/day | "Hybrid rule-based and ML" scoring; community submissions | **Blocked**: ask whether model training is within "security research … related purposes" |
+| P4 | Phishing.Database (`mitchellkrogza`) | MIT (repository); **upstream feeds not disclosed** in the README | PyFunceble *liveness* (ACTIVE/INACTIVE), not phishing verification | **Blocked**: upstream unknown; liveness ≠ label |
+| P5 | URLhaus | [API page](https://urlhaus.abuse.ch/api/): tracks malware distribution only, "(Phishing is not Malware)"; commercial users "may require a paid subscription" | — | **Rejected for phishing labels** |
+| P6 | APWG eCrime eXchange | Membership and data-sharing agreement (not reviewed in detail) | Member-reported, curated | **Blocked**: requires membership; the cleanest route if eligible |
+| — | PhiUSIIL, Hannousse 2021 | CC BY 4.0 | Feed-derived (2019–2024, 2020) | **Approved** (existing), but dated |
+
+### 10c. Plan for appropriately licensed phishing examples
+
+1. **Request written permission** (template text for the owner to send):
+   - **PhishTank (Cisco):** P1. Ask for internal storage of the verified feed, model training and
+     evaluation, no redistribution of raw rows, and attribution in reports.
+   - **PhishStats:** P3. Same questions.
+2. **Explore APWG eCX** academic or research membership (P6).
+3. **Until one is granted:**
+   - Phishing data stays the approved PhiUSIIL + Hannousse sets.
+   - Any experiment adding new legitimate data must use source and time masking (as L2), leave-one-source-out
+     evaluation, and report the class-time mismatch.
+   - **No model may be promoted on the strength of new legitimate data alone.**
+4. Whatever is granted, record its terms snapshot (URL, retrieval date, SHA-256) in `registry.py`
+   and the provenance of every row.
+
+### 10d. Decisions requested from the owner (none taken by the assistant)
+
+| # | Decision | Recommendation |
+|---|---|---|
+| D1 | Approve S1–S3, and S4 under its conditions, for collection | Approve: CC0/OGL/public domain; first-party label basis |
+| D2 | Project status: academic research or product | Needed for P2/P3 and any NC input |
+| D3 | S7 Common Crawl | Legal or owner sign-off, or keep blocked |
+| D4 | Send permission requests to PhishTank/Cisco and PhishStats; consider APWG | Yes |
+| D5 | Confirm whether CC BY 4.0 from Hannousse's authors suffices for its Yandex-derived rows | Owner decision |
+
+**Gating:** collection may start only after D1 is recorded here, *and* a cleared phishing source exists
+(D4/D6) or the owner explicitly accepts the legitimate-only design with the mitigations in 10c.3.
+
+### 10e. Collector implementation (dry-run only)
+
+- **Code:**
+  - `src/data/legit_sources/registry.py`: source statuses mirror this document; none is `approved`.
+  - `policy.py`: frozen-PSL loader (checksum enforced, ICANN/private sections, wildcard/exception
+    rules); shape flags; privacy exclusion; §3 labeling rules; record schema validation;
+    order-independent batch SHA-256.
+  - `parsers.py`: S1–S4 payload parsers (pure).
+  - `collect.py`: dry-run planner. `--execute` always refuses (exit 2). No network I/O.
+- **Commands:**
+  - `python -m src.data.legit_sources.collect --all` prints the plans.
+  - `python -m pytest -q tests/test_legit_sources.py` (40 tests, run with the network blocked at the
+    socket level; synthetic fixtures only).
+- **Still to do before any real run:**
+  - freeze an actual PSL snapshot (MPL-2.0, record its hash);
+  - implement the fetchers, behind the approval gate;
+  - add the conflict check against approved phishing data;
+  - add near-duplicate detection and the §6 split, leakage and shortcut gates.
