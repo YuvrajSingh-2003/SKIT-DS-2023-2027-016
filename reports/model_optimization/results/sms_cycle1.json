@@ -1,0 +1,222 @@
+{
+  "split": "val",
+  "split_sha256": "24d7e8849017938885e6ed9062b9bc4d53a87e2cbe9e8b5c968b53b5dc5d7930",
+  "production": {
+    "artifact": "models/sms_baseline/run-20261028T122841Z-seed42/model.joblib",
+    "sha256": "9f753dd5235537c77b046044a058592c9c64f791fc4608abce0d3eb0a5b85815",
+    "size_bytes": 1449828,
+    "latency_ms": 0.7340385349999679,
+    "val": {
+      "per_class": {
+        "legitimate": {
+          "precision": 0.9877049180327869,
+          "recall": 0.9972413793103448,
+          "f1": 0.9924502402196294,
+          "support": 725
+        },
+        "generic_spam": {
+          "precision": 0.8688524590163934,
+          "recall": 0.8412698412698413,
+          "f1": 0.8548387096774194,
+          "support": 63
+        },
+        "smishing": {
+          "precision": 0.9583333333333334,
+          "recall": 0.8961038961038961,
+          "f1": 0.9261744966442953,
+          "support": 77
+        }
+      },
+      "macro_f1": 0.9244878155137813,
+      "weighted_f1": 0.9765279758503116,
+      "confusion_matrix": {
+        "labels": [
+          "legitimate",
+          "generic_spam",
+          "smishing"
+        ],
+        "rows_true_cols_pred": [
+          [
+            723,
+            2,
+            0
+          ],
+          [
+            7,
+            53,
+            3
+          ],
+          [
+            2,
+            6,
+            69
+          ]
+        ]
+      },
+      "undefined_precision": [],
+      "generic_spam_predicted_smishing": {
+        "count": 3,
+        "of": 63,
+        "rate": 0.047619047619047616
+      },
+      "legitimate_predicted_smishing": {
+        "count": 0,
+        "of": 725,
+        "rate": 0.0
+      },
+      "legitimate_fpr": 0.002758620689655172
+    }
+  },
+  "A_retrain": {
+    "artifact": "models/candidates/sms/A_retrain/model.joblib",
+    "sha256": "4de7b9b672623e18cbbd53560422dfcd0edb2ba3b4bbdca8c34594398a82a389",
+    "size_bytes": 1449844,
+    "train_seconds": 6.4871204300000045,
+    "latency_ms": 0.7092009749999306,
+    "agreement_with_production": 1.0,
+    "macro_f1_vs_production": {
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p_b_not_better": 1.0
+    },
+    "val": {
+      "per_class": {
+        "legitimate": {
+          "precision": 0.9877049180327869,
+          "recall": 0.9972413793103448,
+          "f1": 0.9924502402196294,
+          "support": 725
+        },
+        "generic_spam": {
+          "precision": 0.8688524590163934,
+          "recall": 0.8412698412698413,
+          "f1": 0.8548387096774194,
+          "support": 63
+        },
+        "smishing": {
+          "precision": 0.9583333333333334,
+          "recall": 0.8961038961038961,
+          "f1": 0.9261744966442953,
+          "support": 77
+        }
+      },
+      "macro_f1": 0.9244878155137813,
+      "weighted_f1": 0.9765279758503116,
+      "confusion_matrix": {
+        "labels": [
+          "legitimate",
+          "generic_spam",
+          "smishing"
+        ],
+        "rows_true_cols_pred": [
+          [
+            723,
+            2,
+            0
+          ],
+          [
+            7,
+            53,
+            3
+          ],
+          [
+            2,
+            6,
+            69
+          ]
+        ]
+      },
+      "undefined_precision": [],
+      "generic_spam_predicted_smishing": {
+        "count": 3,
+        "of": 63,
+        "rate": 0.047619047619047616
+      },
+      "legitimate_predicted_smishing": {
+        "count": 0,
+        "of": 725,
+        "rate": 0.0
+      },
+      "legitimate_fpr": 0.002758620689655172
+    }
+  },
+  "B_svm_char": {
+    "artifact": "models/candidates/sms/B_svm_char/model.joblib",
+    "sha256": "da92b5d0f515df2307324007365d2195fcdba7f3c56c26857bdd3c1064c4ac96",
+    "size_bytes": 4757780,
+    "train_seconds": 1.2210867149999558,
+    "latency_ms": 3.759684474999858,
+    "agreement_with_production": 0.9953757225433526,
+    "macro_f1_vs_production": {
+      "mean": 0.016186773136433366,
+      "ci95": [
+        0.0024812561107246806,
+        0.034559926596487024
+      ],
+      "p_b_not_better": 0.018
+    },
+    "val": {
+      "per_class": {
+        "legitimate": {
+          "precision": 0.9890710382513661,
+          "recall": 0.9986206896551724,
+          "f1": 0.9938229238160604,
+          "support": 725
+        },
+        "generic_spam": {
+          "precision": 0.8888888888888888,
+          "recall": 0.8888888888888888,
+          "f1": 0.8888888888888888,
+          "support": 63
+        },
+        "smishing": {
+          "precision": 0.9857142857142858,
+          "recall": 0.8961038961038961,
+          "f1": 0.9387755102040817,
+          "support": 77
+        }
+      },
+      "macro_f1": 0.9404957743030103,
+      "weighted_f1": 0.9812801549738244,
+      "confusion_matrix": {
+        "labels": [
+          "legitimate",
+          "generic_spam",
+          "smishing"
+        ],
+        "rows_true_cols_pred": [
+          [
+            724,
+            1,
+            0
+          ],
+          [
+            6,
+            56,
+            1
+          ],
+          [
+            2,
+            6,
+            69
+          ]
+        ]
+      },
+      "undefined_precision": [],
+      "generic_spam_predicted_smishing": {
+        "count": 1,
+        "of": 63,
+        "rate": 0.015873015873015872
+      },
+      "legitimate_predicted_smishing": {
+        "count": 0,
+        "of": 725,
+        "rate": 0.0
+      },
+      "legitimate_fpr": 0.001379310344827586
+    }
+  }
+}

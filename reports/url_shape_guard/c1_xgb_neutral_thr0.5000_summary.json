@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-10-29T04:11:46.614243+00:00",
+  "model_sha256": "1e33996479f164a47b752b8fa95c0c771e269ee6e64d343e25c97f1528e46aeb",
+  "nature": "controlled stress test on transformed legitimate validation URLs; not a real-world FPR",
+  "config_sha256": "28b7d2fe8a374ed3f1b248b4602b27e385b04edee7c58114f88d68f7e56d136e",
+  "threshold": 0.5,
+  "flag_rate": {
+    "as_is": 0.031,
+    "drop_www": 0.031,
+    "http_scheme": 0.031,
+    "add_path": 1.0,
+    "add_query": 1.0
+  },
+  "cases_per_transform": {
+    "as_is": 2000,
+    "drop_www": 2000,
+    "http_scheme": 2000,
+    "add_path": 2000,
+    "add_query": 2000
+  },
+  "status": "fail",
+  "violations": [
+    "add_path: 1.0000 > max 0.0500",
+    "add_query: 1.0000 > max 0.0500",
+    "add_path: gap +0.9690 over as_is > 0.0300",
+    "add_query: gap +0.9690 over as_is > 0.0300"
+  ]
+}

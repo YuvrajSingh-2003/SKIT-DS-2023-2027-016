@@ -1,0 +1,96 @@
+{
+  "c3_reuse_c2_xgb_host_thr": {
+    "artifact": "models/candidates/url/c2_xgb_host/model.joblib",
+    "size_bytes": 930789,
+    "normalization": "host",
+    "estimator": "xgboost (production hyperparameters)",
+    "seed": 42,
+    "threshold": 0.7366147041320801,
+    "train_split": "stratified_train.csv",
+    "train_split_sha256": "02c64a6fd96b6da4f28339c047e294f2294080bdd5386f77bcc9005f315d7a77",
+    "selection_split": "stratified_validation.csv",
+    "selection_split_sha256": "3d10e1836b7827ce56f54a1c75fe4ef0549e9b64c394f8bd9714b6ce8462f48d",
+    "feature_extractor": "src.features.url_lexical.extract_lexical_url_dataframe (unchanged)",
+    "train_seconds": null,
+    "model_sha256": "e8bdd3837f954773faf092cbe9e8657ba2fb84393164f94e7cc3ccf8899a20fa",
+    "validation": {
+      "threshold": 0.7366147041320801,
+      "legitimate": {
+        "precision": 0.7424974000891398,
+        "recall": 0.9883324269540713,
+        "f1": 0.8479565650781532,
+        "support": 20227
+      },
+      "phishing": {
+        "precision": 0.9718410690848347,
+        "recall": 0.5401910067648229,
+        "f1": 0.694403000980434,
+        "support": 15078
+      },
+      "macro_f1": 0.7711797830292936,
+      "fpr": 0.01166757304592871,
+      "roc_auc": 0.8400873490839836,
+      "confusion": {
+        "tn": 19991,
+        "fp": 236,
+        "fn": 6933,
+        "tp": 8145
+      }
+    },
+    "probes": {
+      "legit_as_is": {
+        "fpr": 0.01166757304592871,
+        "rows": 20227
+      },
+      "legit_drop_www": {
+        "fpr": 0.01166757304592871,
+        "rows": 20227
+      },
+      "legit_http": {
+        "fpr": 0.01166757304592871,
+        "rows": 20227
+      },
+      "legit_no_scheme": {
+        "fpr": 0.01166757304592871,
+        "rows": 20227
+      },
+      "legit_path_about": {
+        "fpr": 0.01166757304592871,
+        "rows": 20227
+      },
+      "legit_path_query": {
+        "fpr": 0.01166757304592871,
+        "rows": 20227
+      }
+    },
+    "openphish_recall": {
+      "recall": 0.5966666666666667,
+      "rows": 300
+    },
+    "latency_ms_single_url_incl_features": 2.6748550949997707,
+    "test": {
+      "threshold": 0.7366147041320801,
+      "legitimate": {
+        "precision": 0.7414273507448824,
+        "recall": 0.9866027288906466,
+        "f1": 0.8466221232368226,
+        "support": 20228
+      },
+      "phishing": {
+        "precision": 0.9676957921087138,
+        "recall": 0.538400318344608,
+        "f1": 0.6918651723697107,
+        "support": 15078
+      },
+      "macro_f1": 0.7692436478032667,
+      "fpr": 0.013397271109353372,
+      "roc_auc": 0.8401801338989402,
+      "confusion": {
+        "tn": 19957,
+        "fp": 271,
+        "fn": 6960,
+        "tp": 8118
+      }
+    }
+  }
+}

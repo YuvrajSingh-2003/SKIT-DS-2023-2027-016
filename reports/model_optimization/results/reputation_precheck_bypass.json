@@ -1,0 +1,99 @@
+{
+  "applies": "the pre-check would withhold the model advisory for this phishing URL",
+  "full_host_listed": "every exact host is on the list (worst case)",
+  "registrable_domain_listed": "every URL's registrable domain (last two labels) is on the list",
+  "full_host_listed:openphish_20261028": {
+    "rows": 300,
+    "applies": 194,
+    "applies_rate": 0.6466666666666666,
+    "reasons": {
+      "bare homepage of a listed domain": 194,
+      "URL has a path, query or fragment": 106
+    },
+    "applied_examples": [
+      "https://intellectual-transform-624217.framer.app/",
+      "http://home-cry-com.square.site/",
+      "http://tokinim-cdng-hkj.lol/",
+      "http://ncapmmda-ncr.cfd/",
+      "http://straightforward-griffin-592982.framer.app/",
+      "https://divinedownload.com/",
+      "https://team-center-feature-update.vercel.app/",
+      "https://netflixph.vercel.app/",
+      "http://www.ph-tg77.net/",
+      "https://www.flhealthlicense-tawny.vercel.app/"
+    ]
+  },
+  "full_host_listed:phiusiil_validation_phishing": {
+    "rows": 15078,
+    "applies": 10840,
+    "applies_rate": 0.7189282398196047,
+    "reasons": {
+      "bare homepage of a listed domain": 10840,
+      "URL has a path, query or fragment": 4125,
+      "IP address host": 82,
+      "non-ASCII or punycode host": 23,
+      "explicit port": 4,
+      "URL contains userinfo": 4
+    },
+    "applied_examples": [
+      "http://www.923915.com",
+      "http://www.eblaghy.cf",
+      "http://www.abuser360rat.np-ip.info",
+      "http://www.is-shaparak-ir.ga",
+      "http://www.ticketguruu.com",
+      "http://www.fenglintechnology-app01.oss-me-east-1.aliyuncs.com",
+      "http://u1995713.cp.regruhosting.ru/",
+      "http://www.ukrainecenter.yolasite.com",
+      "https://micro-file-login-share-drive-view.firebaseapp.com/",
+      "https://signin-currently.weeblysite.com/"
+    ]
+  },
+  "registrable_domain_listed:openphish_20261028": {
+    "rows": 300,
+    "applies": 44,
+    "applies_rate": 0.14666666666666667,
+    "reasons": {
+      "domain not on the list (exact host or www. only)": 150,
+      "URL has a path, query or fragment": 106,
+      "bare homepage of a listed domain": 44
+    },
+    "applied_examples": [
+      "http://tokinim-cdng-hkj.lol/",
+      "http://ncapmmda-ncr.cfd/",
+      "https://divinedownload.com/",
+      "http://www.ph-tg77.net/",
+      "https://www.htautenticacionbcgatorrr.info/",
+      "http://intantogel.net/",
+      "http://lstore.gg/",
+      "http://mywork.run/",
+      "http://r5hnw.com/",
+      "http://bh7p3.com/"
+    ]
+  },
+  "registrable_domain_listed:phiusiil_validation_phishing": {
+    "rows": 15078,
+    "applies": 4726,
+    "applies_rate": 0.31343679533094576,
+    "reasons": {
+      "domain not on the list (exact host or www. only)": 6114,
+      "bare homepage of a listed domain": 4726,
+      "URL has a path, query or fragment": 4125,
+      "IP address host": 82,
+      "non-ASCII or punycode host": 23,
+      "explicit port": 4,
+      "URL contains userinfo": 4
+    },
+    "applied_examples": [
+      "http://www.923915.com",
+      "http://www.eblaghy.cf",
+      "http://www.is-shaparak-ir.ga",
+      "http://www.ticketguruu.com",
+      "http://www.verkaufsfunnel.com",
+      "http://www.offensepayinter.cf",
+      "http://metamaske.pro",
+      "http://www.pulsa46.info",
+      "http://www.kilu.at",
+      "http://www.colemang.cf"
+    ]
+  }
+}

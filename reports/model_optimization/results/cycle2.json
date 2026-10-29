@@ -1,0 +1,72 @@
+{
+  "c2_xgb_host": {
+    "artifact": "models/candidates/url/c2_xgb_host/model.joblib",
+    "size_bytes": 930789,
+    "normalization": "host",
+    "estimator": "xgboost (production hyperparameters)",
+    "seed": 42,
+    "threshold": 0.5,
+    "train_split": "stratified_train.csv",
+    "train_split_sha256": "02c64a6fd96b6da4f28339c047e294f2294080bdd5386f77bcc9005f315d7a77",
+    "selection_split": "stratified_validation.csv",
+    "selection_split_sha256": "3d10e1836b7827ce56f54a1c75fe4ef0549e9b64c394f8bd9714b6ce8462f48d",
+    "feature_extractor": "src.features.url_lexical.extract_lexical_url_dataframe (unchanged)",
+    "train_seconds": 12.235670017000018,
+    "model_sha256": "e8bdd3837f954773faf092cbe9e8657ba2fb84393164f94e7cc3ccf8899a20fa",
+    "validation": {
+      "threshold": 0.5,
+      "legitimate": {
+        "precision": 0.7727697622434464,
+        "recall": 0.94003065209868,
+        "f1": 0.8482334047109208,
+        "support": 20227
+      },
+      "phishing": {
+        "precision": 0.8866355140186916,
+        "recall": 0.6291948534288367,
+        "f1": 0.7360539995344868,
+        "support": 15078
+      },
+      "macro_f1": 0.7921437021227038,
+      "fpr": 0.05996934790132002,
+      "roc_auc": 0.8400873490839836,
+      "confusion": {
+        "tn": 19014,
+        "fp": 1213,
+        "fn": 5591,
+        "tp": 9487
+      }
+    },
+    "probes": {
+      "legit_as_is": {
+        "fpr": 0.05996934790132002,
+        "rows": 20227
+      },
+      "legit_drop_www": {
+        "fpr": 0.05996934790132002,
+        "rows": 20227
+      },
+      "legit_http": {
+        "fpr": 0.05996934790132002,
+        "rows": 20227
+      },
+      "legit_no_scheme": {
+        "fpr": 0.05996934790132002,
+        "rows": 20227
+      },
+      "legit_path_about": {
+        "fpr": 0.05996934790132002,
+        "rows": 20227
+      },
+      "legit_path_query": {
+        "fpr": 0.05996934790132002,
+        "rows": 20227
+      }
+    },
+    "openphish_recall": {
+      "recall": 0.6566666666666666,
+      "rows": 300
+    },
+    "latency_ms_single_url_incl_features": 2.5867110050000974
+  }
+}

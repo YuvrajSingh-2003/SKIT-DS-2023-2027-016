@@ -1,0 +1,132 @@
+{
+  "production_raw": {
+    "artifact": "models/url_inference/model.joblib",
+    "sha256": "2f2e1d492ec3bc96891df3c08d3e80ff158021f6321160e3d55a52707f2d2adc",
+    "size_bytes": 752883,
+    "validation": {
+      "threshold": 0.5,
+      "legitimate": {
+        "precision": 0.958127488128927,
+        "recall": 0.9875908439214911,
+        "f1": 0.9726360892005064,
+        "support": 20227
+      },
+      "phishing": {
+        "precision": 0.9826369673491976,
+        "recall": 0.9421010744130521,
+        "f1": 0.9619421683483442,
+        "support": 15078
+      },
+      "macro_f1": 0.9672891287744253,
+      "fpr": 0.012409156078508924,
+      "roc_auc": 0.98733800827382,
+      "confusion": {
+        "tn": 19976,
+        "fp": 251,
+        "fn": 873,
+        "tp": 14205
+      }
+    },
+    "probes": {
+      "legit_as_is": {
+        "fpr": 0.012409156078508924,
+        "rows": 20227
+      },
+      "legit_drop_www": {
+        "fpr": 0.8517822712216344,
+        "rows": 20227
+      },
+      "legit_http": {
+        "fpr": 1.0,
+        "rows": 20227
+      },
+      "legit_no_scheme": {
+        "fpr": 1.0,
+        "rows": 20227
+      },
+      "legit_path_about": {
+        "fpr": 1.0,
+        "rows": 20227
+      },
+      "legit_path_query": {
+        "fpr": 1.0,
+        "rows": 20227
+      }
+    },
+    "openphish_recall": {
+      "recall": 0.95,
+      "rows": 300
+    },
+    "latency_ms_single_url_incl_features": 3.71722855999991
+  },
+  "c1_xgb_neutral": {
+    "artifact": "models/candidates/url/c1_xgb_neutral/model.joblib",
+    "size_bytes": 900392,
+    "normalization": "neutral",
+    "estimator": "xgboost (production hyperparameters)",
+    "seed": 42,
+    "threshold": 0.5,
+    "train_split": "stratified_train.csv",
+    "train_split_sha256": "02c64a6fd96b6da4f28339c047e294f2294080bdd5386f77bcc9005f315d7a77",
+    "selection_split": "stratified_validation.csv",
+    "selection_split_sha256": "3d10e1836b7827ce56f54a1c75fe4ef0549e9b64c394f8bd9714b6ce8462f48d",
+    "feature_extractor": "src.features.url_lexical.extract_lexical_url_dataframe (unchanged)",
+    "train_seconds": 13.224967142000025,
+    "model_sha256": "1e33996479f164a47b752b8fa95c0c771e269ee6e64d343e25c97f1528e46aeb",
+    "validation": {
+      "threshold": 0.5,
+      "legitimate": {
+        "precision": 0.8154633172517052,
+        "recall": 0.9693479013200178,
+        "f1": 0.885771724153509,
+        "support": 20227
+      },
+      "phishing": {
+        "precision": 0.944942722671166,
+        "recall": 0.7057302029446876,
+        "f1": 0.808003341053191,
+        "support": 15078
+      },
+      "macro_f1": 0.84688753260335,
+      "fpr": 0.0306520986799822,
+      "roc_auc": 0.8835373226047776,
+      "confusion": {
+        "tn": 19607,
+        "fp": 620,
+        "fn": 4437,
+        "tp": 10641
+      }
+    },
+    "probes": {
+      "legit_as_is": {
+        "fpr": 0.0306520986799822,
+        "rows": 20227
+      },
+      "legit_drop_www": {
+        "fpr": 0.0306520986799822,
+        "rows": 20227
+      },
+      "legit_http": {
+        "fpr": 0.0306520986799822,
+        "rows": 20227
+      },
+      "legit_no_scheme": {
+        "fpr": 0.0306520986799822,
+        "rows": 20227
+      },
+      "legit_path_about": {
+        "fpr": 1.0,
+        "rows": 20227
+      },
+      "legit_path_query": {
+        "fpr": 1.0,
+        "rows": 20227
+      }
+    },
+    "openphish_recall": {
+      "recall": 0.8733333333333333,
+      "rows": 300
+    },
+    "latency_ms_single_url_incl_features": 2.878890869999964
+  }
+}

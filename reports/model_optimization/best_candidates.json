@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-10-29",
+  "recommendation": "retain production URL model; do not promote any candidate",
+  "production": {
+    "path": "models/url_inference/model.joblib",
+    "sha256": "2f2e1d492ec3bc96891df3c08d3e80ff158021f6321160e3d55a52707f2d2adc",
+    "status": "retained; known template shortcut (probe FPR 85-100% off-template)"
+  },
+  "best_template_invariant_candidate": {
+    "name": "c3_host_threshold",
+    "path": "models/candidates/url/c2_xgb_host/model.joblib",
+    "sha256": "e8bdd3837f954773faf092cbe9e8657ba2fb84393164f94e7cc3ccf8899a20fa",
+    "normalization": "host",
+    "threshold": 0.7366147041320801,
+    "validation": {"phishing_f1": 0.6944, "fpr": 0.0117, "roc_auc": 0.8401},
+    "test": {"phishing_f1": 0.6919, "fpr": 0.0134, "roc_auc": 0.8402},
+    "probe_fpr_max": 0.0117,
+    "openphish_recall": 0.597,
+    "status": "research candidate only; recall too low to replace production"
+  },
+  "other_candidates": [
+    {"name": "c1_xgb_neutral", "path": "models/candidates/url/c1_xgb_neutral/model.joblib",
+     "sha256": "1e33996479f164a47b752b8fa95c0c771e269ee6e64d343e25c97f1528e46aeb",
+     "test": {"phishing_f1": 0.8060, "fpr": 0.0316, "roc_auc": 0.8841}, "status": "rejected: path shortcut remains (probe FPR 100%)"},
+    {"name": "c2_xgb_host@0.5", "path": "models/candidates/url/c2_xgb_host/model.joblib",
+     "sha256": "e8bdd3837f954773faf092cbe9e8657ba2fb84393164f94e7cc3ccf8899a20fa",
+     "test": {"phishing_f1": 0.7345, "fpr": 0.0597, "roc_auc": 0.8402}, "status": "superseded by c3 operating point"}
+  ],
+  "sms": {"status": "not retrained; existing baseline models/sms_baseline/run-20261028T122841Z-seed42 kept (cycles spent on URL priority)"}
+}

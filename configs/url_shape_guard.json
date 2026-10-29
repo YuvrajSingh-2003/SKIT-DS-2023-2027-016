@@ -1,0 +1,30 @@
+{
+  "_comment": "URL-shape regression guard. Controlled stress test, NOT a real-world false-positive estimate. See docs/url_shape_guard.md.",
+  "source_split": "data/processed/url_splits/stratified_validation.csv",
+  "source_split_sha256": "3d10e1836b7827ce56f54a1c75fe4ef0549e9b64c394f8bd9714b6ce8462f48d",
+  "sample_size": 2000,
+  "seed": 42,
+  "max_flag_rate": {
+    "as_is": 0.05,
+    "drop_www": 0.05,
+    "http_scheme": 0.05,
+    "add_path": 0.05,
+    "add_query": 0.05
+  },
+  "max_gap_over_as_is": 0.03,
+  "threshold_rationale": "Proposed, review required. Evidence (reports/model_optimization/model_comparison.md, validation): production flags 1.24% of template-shaped legitimate URLs; the template-invariant candidates flag 3.07% (c1, scheme/www stripped) and 1.17-6.0% (c2/c3, host only, threshold-dependent). A 5% absolute ceiling is about 4x production's in-template rate and above c1's 3.1%, so a reasonable shape-robust retrain can pass, while the observed shortcut (85-100%) fails decisively. The 3-point gap limit catches shape dependence even when the as-is rate is low. Trade-off: a lower ceiling forces a higher decision threshold and costs recall (c3 reached 1.2% but caught only 54% of test phishing); a higher ceiling lets partial shortcuts through.",
+  "known_failing_models": {
+    "2f2e1d492ec3bc96891df3c08d3e80ff158021f6321160e3d55a52707f2d2adc": {
+      "reason": "Production URL model (2026-10-28) learned the PhiUSIIL https://www.<host> template. Exempt from the target ceilings only while this exact artifact is deployed; any retrained artifact must meet the ceilings. CI still fails if its rates rise above the recorded values plus tolerance, or if it unexpectedly passes (remove this entry then).",
+      "recorded_flag_rate": {
+        "as_is": 0.013,
+        "drop_www": 0.8445,
+        "http_scheme": 1.0,
+        "add_path": 1.0,
+        "add_query": 0.9995
+      },
+      "ratchet_tolerance": 0.02,
+      "recorded_on": "2026-10-29, 2000-URL guard sample (seed 42)"
+    }
+  }
+}

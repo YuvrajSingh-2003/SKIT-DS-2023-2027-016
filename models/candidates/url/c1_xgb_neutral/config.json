@@ -1,0 +1,13 @@
+{
+  "normalization": "neutral",
+  "estimator": "xgboost (production hyperparameters)",
+  "seed": 42,
+  "threshold": 0.5,
+  "train_split": "stratified_train.csv",
+  "train_split_sha256": "02c64a6fd96b6da4f28339c047e294f2294080bdd5386f77bcc9005f315d7a77",
+  "selection_split": "stratified_validation.csv",
+  "selection_split_sha256": "3d10e1836b7827ce56f54a1c75fe4ef0549e9b64c394f8bd9714b6ce8462f48d",
+  "feature_extractor": "src.features.url_lexical.extract_lexical_url_dataframe (unchanged)",
+  "train_seconds": 13.224967142000025,
+  "model_sha256": "1e33996479f164a47b752b8fa95c0c771e269ee6e64d343e25c97f1528e46aeb"
+}

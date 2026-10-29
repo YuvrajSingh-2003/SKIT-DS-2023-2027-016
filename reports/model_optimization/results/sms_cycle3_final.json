@@ -1,0 +1,146 @@
+{
+  "split": "test",
+  "split_sha256": "dc153500d0718ce5078734db390cbbafa5d9105a1ab41933fca285c477157699",
+  "production": {
+    "artifact": "models/sms_baseline/run-20261028T122841Z-seed42/model.joblib",
+    "sha256": "9f753dd5235537c77b046044a058592c9c64f791fc4608abce0d3eb0a5b85815",
+    "size_bytes": 1449828,
+    "latency_ms": 0.7455650250005874,
+    "test": {
+      "per_class": {
+        "legitimate": {
+          "precision": 0.9890859481582538,
+          "recall": 1.0,
+          "f1": 0.9945130315500685,
+          "support": 725
+        },
+        "generic_spam": {
+          "precision": 0.8448275862068966,
+          "recall": 0.7777777777777778,
+          "f1": 0.8099173553719008,
+          "support": 63
+        },
+        "smishing": {
+          "precision": 0.8918918918918919,
+          "recall": 0.8571428571428571,
+          "f1": 0.8741721854304636,
+          "support": 77
+        }
+      },
+      "macro_f1": 0.8928675241174776,
+      "weighted_f1": 0.9703560688328037,
+      "confusion_matrix": {
+        "labels": [
+          "legitimate",
+          "generic_spam",
+          "smishing"
+        ],
+        "rows_true_cols_pred": [
+          [
+            725,
+            0,
+            0
+          ],
+          [
+            6,
+            49,
+            8
+          ],
+          [
+            2,
+            9,
+            66
+          ]
+        ]
+      },
+      "undefined_precision": [],
+      "generic_spam_predicted_smishing": {
+        "count": 8,
+        "of": 63,
+        "rate": 0.12698412698412698
+      },
+      "legitimate_predicted_smishing": {
+        "count": 0,
+        "of": 725,
+        "rate": 0.0
+      },
+      "legitimate_fpr": 0.0
+    }
+  },
+  "B_svm_char": {
+    "artifact": "models/candidates/sms/B_svm_char/model.joblib",
+    "sha256": "da92b5d0f515df2307324007365d2195fcdba7f3c56c26857bdd3c1064c4ac96",
+    "size_bytes": 4757780,
+    "train_seconds": null,
+    "latency_ms": 3.752180415000339,
+    "agreement_with_production": 0.9988439306358381,
+    "macro_f1_vs_production": {
+      "mean": 0.00496504268438699,
+      "ci95": [
+        0.0,
+        0.017116466413288407
+      ],
+      "p_b_not_better": 0.364
+    },
+    "test": {
+      "per_class": {
+        "legitimate": {
+          "precision": 0.9890859481582538,
+          "recall": 1.0,
+          "f1": 0.9945130315500685,
+          "support": 725
+        },
+        "generic_spam": {
+          "precision": 0.8596491228070176,
+          "recall": 0.7777777777777778,
+          "f1": 0.8166666666666667,
+          "support": 63
+        },
+        "smishing": {
+          "precision": 0.8933333333333333,
+          "recall": 0.8701298701298701,
+          "f1": 0.881578947368421,
+          "support": 77
+        }
+      },
+      "macro_f1": 0.8975862151950521,
+      "weighted_f1": 0.9715069674233159,
+      "confusion_matrix": {
+        "labels": [
+          "legitimate",
+          "generic_spam",
+          "smishing"
+        ],
+        "rows_true_cols_pred": [
+          [
+            725,
+            0,
+            0
+          ],
+          [
+            6,
+            49,
+            8
+          ],
+          [
+            2,
+            8,
+            67
+          ]
+        ]
+      },
+      "undefined_precision": [],
+      "generic_spam_predicted_smishing": {
+        "count": 8,
+        "of": 63,
+        "rate": 0.12698412698412698
+      },
+      "legitimate_predicted_smishing": {
+        "count": 0,
+        "of": 725,
+        "rate": 0.0
+      },
+      "legitimate_fpr": 0.0
+    }
+  }
+}

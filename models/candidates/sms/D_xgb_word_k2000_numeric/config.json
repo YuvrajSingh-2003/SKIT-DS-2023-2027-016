@@ -1,0 +1,9 @@
+{
+  "candidate": "D_xgb_word_k2000_numeric",
+  "seed": 42,
+  "pipeline": "Pipeline(steps=[('features',\n                 FeatureUnion(transformer_list=[('text',\n                                                 Pipeline(steps=[('tfidf',\n                                                                  TfidfVectorizer(lowercase=False,\n                                                                                  min_df=2,\n                                                                                  ngram_range=(1,\n                                                                                               2),\n                                                                                  preprocessor=<function normalize_text at 0x7f14b40fc460>,\n                                                                                  sublinear_tf=True)),\n                                                                 ('select',\n                                                                  SelectKBest(k=2000,\n                                                                              score_func=<function chi2 at 0x7f14b43b9640>))])),\n                                                ('numeric',\n                                                 Pipeline(steps=[('num',\n                                                                  SmsNumericFeatures()),\n                                                                 ('scale',\n                                                                  MaxAbsScaler())]))])),\n                ('clf', BalancedXGB())])",
+  "train_split_sha256": "a8e48b561ff8fb377df07829ec31977ab7b09ddf2ac4a7a8879c92336ac46496",
+  "selection_split_sha256": "24d7e8849017938885e6ed9062b9bc4d53a87e2cbe9e8b5c968b53b5dc5d7930",
+  "train_seconds": 1.934978397000009,
+  "model_sha256": "e60bfc3df51ea32740d803981b27cdb2a7c2621cdef9256d8fca6c72b87dcd26"
+}

@@ -8,6 +8,7 @@ from app.schemas.scan import ScanRequest, ScanResponse
 from app.services.url_processor import process_url
 from app.services.blockchain_checker import check_blockchain_threat
 from app.services.ml_detector import predict_phishing
+from app.services import reputation_precheck
 from app.services.security_checker import (
     check_url_security,
     calculate_risk_level,
@@ -34,6 +35,13 @@ ML_PHISHING_ADVISORY = "URL model predicts phishing (advisory; not a confirmed t
 REGISTRY_UNAVAILABLE_NOTE = (
     "Threat registry unavailable and no threat signal found; result is inconclusive, "
     "not safe (unavailable service, not threat evidence)"
+)
+
+# Only reachable when the disabled-by-default reputation pre-check applies.
+REPUTATION_PRECHECK_NOTE = (
+    "Bare homepage of a domain on the configured reputation list; the URL "
+    "model's phishing advisory was not applied (popularity is not a safety "
+    "verdict; registry and heuristic checks still apply)"
 )
 
 PATH_OR_QUERY_NOTE = (
@@ -106,9 +114,15 @@ def _build_scan_result(url: str) -> dict:
             # Heuristics set the base level (computed before advisory notes are added).
             risk_level = calculate_risk_level(findings)
             if ml_result["label"] == "phishing":
-                if risk_level == "SAFE":
-                    risk_level = "MEDIUM"
-                findings.append(ML_PHISHING_ADVISORY)
+                if reputation_precheck.evaluate(url)["applies"]:
+                    # The advisory is withheld, but popularity never earns SAFE.
+                    if risk_level == "SAFE":
+                        risk_level = "UNKNOWN"
+                    findings.append(REPUTATION_PRECHECK_NOTE)
+                else:
+                    if risk_level == "SAFE":
+                        risk_level = "MEDIUM"
+                    findings.append(ML_PHISHING_ADVISORY)
             message = "URL processed; URL model prediction is advisory, not a confirmed threat"
             # SAFE needs the registry check. With the registry unavailable, "no heuristic
             # findings + advisory model says legitimate" is not enough reassurance, so the

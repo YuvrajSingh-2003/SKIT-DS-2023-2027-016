@@ -1,0 +1,28 @@
+name: URL shape guard
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  url-shape-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Guard logic, transforms, thresholds and exemption rules (no model needed).
+      # The deployed-model check is skipped here because *.joblib artifacts are
+      # gitignored. Where the artifact is provisioned, set
+      # CHAINSHIELD_REQUIRE_MODELS=1 so a missing model fails instead of skipping.
+      - name: Run URL shape guard tests
+        run: python -m pytest -q tests/test_url_shape_guard.py tests/test_reputation_precheck.py tests/test_url_eval_pipeline.py

@@ -1,0 +1,124 @@
+{
+  "protocol": "StratifiedGroupKFold(5, shuffle, seed 42) on train+val by near-duplicate group_id; test untouched",
+  "folds": [
+    {
+      "A_retrain": {
+        "macro_f1": 0.9333470993834648,
+        "per_class_f1": {
+          "legitimate": 0.9927007299270073,
+          "generic_spam": 0.8920863309352518,
+          "smishing": 0.9152542372881356
+        },
+        "legit_fpr": 0.0072992700729927005
+      },
+      "B_svm_char": {
+        "macro_f1": 0.9377184251271843,
+        "per_class_f1": {
+          "legitimate": 0.9927007299270073,
+          "generic_spam": 0.9,
+          "smishing": 0.9204545454545454
+        },
+        "legit_fpr": 0.0072992700729927005
+      }
+    },
+    {
+      "A_retrain": {
+        "macro_f1": 0.9188831733978974,
+        "per_class_f1": {
+          "legitimate": 0.9939320388349514,
+          "generic_spam": 0.8450704225352113,
+          "smishing": 0.9176470588235294
+        },
+        "legit_fpr": 0.0036496350364963502
+      },
+      "B_svm_char": {
+        "macro_f1": 0.9083839531245816,
+        "per_class_f1": {
+          "legitimate": 0.9927272727272727,
+          "generic_spam": 0.8201438848920863,
+          "smishing": 0.9122807017543859
+        },
+        "legit_fpr": 0.0036496350364963502
+      }
+    },
+    {
+      "A_retrain": {
+        "macro_f1": 0.8904705797583655,
+        "per_class_f1": {
+          "legitimate": 0.9896782027929569,
+          "generic_spam": 0.7878787878787878,
+          "smishing": 0.8938547486033519
+        },
+        "legit_fpr": 0.007308160779537149
+      },
+      "B_svm_char": {
+        "macro_f1": 0.9049300981504372,
+        "per_class_f1": {
+          "legitimate": 0.9903147699757869,
+          "generic_spam": 0.8153846153846154,
+          "smishing": 0.9090909090909091
+        },
+        "legit_fpr": 0.0036540803897685747
+      }
+    },
+    {
+      "A_retrain": {
+        "macro_f1": 0.9249206423251298,
+        "per_class_f1": {
+          "legitimate": 0.9945421467556095,
+          "generic_spam": 0.8571428571428571,
+          "smishing": 0.9230769230769231
+        },
+        "legit_fpr": 0.0024330900243309003
+      },
+      "B_svm_char": {
+        "macro_f1": 0.9115488029552852,
+        "per_class_f1": {
+          "legitimate": 0.9927360774818402,
+          "generic_spam": 0.8296296296296296,
+          "smishing": 0.9122807017543859
+        },
+        "legit_fpr": 0.0024330900243309003
+      }
+    },
+    {
+      "A_retrain": {
+        "macro_f1": 0.9467682044431722,
+        "per_class_f1": {
+          "legitimate": 0.9963503649635036,
+          "generic_spam": 0.9027777777777778,
+          "smishing": 0.9411764705882353
+        },
+        "legit_fpr": 0.0036496350364963502
+      },
+      "B_svm_char": {
+        "macro_f1": 0.9387935104499922,
+        "per_class_f1": {
+          "legitimate": 0.9957550030321407,
+          "generic_spam": 0.8857142857142857,
+          "smishing": 0.9349112426035503
+        },
+        "legit_fpr": 0.0012165450121654502
+      }
+    }
+  ],
+  "B_minus_A_macro_f1": {
+    "per_fold": [
+      0.004371325743719456,
+      -0.010499220273315735,
+      0.014459518392071713,
+      -0.013371839369844651,
+      -0.007974693993180071
+    ],
+    "mean": -0.0026029819001098576,
+    "folds_B_better": 2
+  },
+  "A_retrain": {
+    "mean_macro_f1": 0.9228779398616058,
+    "std": 0.01871211278389763
+  },
+  "B_svm_char": {
+    "mean_macro_f1": 0.9202749579614962,
+    "std": 0.014833865530431489
+  }
+}
