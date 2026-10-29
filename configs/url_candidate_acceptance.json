@@ -1,0 +1,19 @@
+{
+  "_comment": "Acceptance criteria for any URL-model candidate. Declared 2026-10-29 BEFORE evaluating candidate www_neutral. Selection uses the validation split only; the locked test split is scored only for a candidate that passes every validation criterion.",
+  "declared_before": "src/experiments/url_www_neutral_candidate.py first run",
+  "selection_split": "data/processed/url_splits/stratified_validation.csv",
+  "baseline_model_sha256": "2f2e1d492ec3bc96891df3c08d3e80ff158021f6321160e3d55a52707f2d2adc",
+  "criteria": {
+    "phishing_recall_drop_max_pp": 1.0,
+    "phishing_recall_drop_ci95_upper_max_pp": 2.0,
+    "in_template_legitimate_fpr_increase_max_pp": 0.5,
+    "unseen_domain_subset_phishing_recall_drop_max_pp": 1.0,
+    "openphish_recall_drop_max_pp": 2.0,
+    "url_shape_guard": "must pass configs/url_shape_guard.json ceilings (all transformations) with no exemption",
+    "real_off_template_legitimate_eval": "REQUIRED: false-positive rate measured on genuine, licensed, held-out legitimate URLs that are not https://www.<host>; transformed (synthetic) URLs are diagnostic only and cannot satisfy this criterion"
+  },
+  "rationale": {
+    "recall": "The model is the only signal for phishing that lacks heuristic findings; a recall loss above 1 pp on 15,078 validation phishing URLs (~150 URLs) is not justified by a false-positive fix that cannot be measured on real data.",
+    "real_data": "No local, licensed dataset contains legitimate URLs outside https://www.<host> (0 of 134,850 in raw PhiUSIIL). Until one exists, no candidate can satisfy the last criterion, so no candidate can be promoted."
+  }
+}

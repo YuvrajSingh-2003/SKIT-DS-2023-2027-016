@@ -207,3 +207,51 @@ def test_real_model_known_shortcut_is_characterized():
     assert model.predict_proba(features)[0, 1] >= 0.5
     features["NoOfSubDomain"] = 1
     assert model.predict_proba(features)[0, 1] < 0.5
+
+
+# ── training/inference parity and held-out regression ─────────────────
+
+def test_training_and_serving_use_the_same_feature_extractor():
+    from src.training import train_url_inference
+
+    assert train_url_inference.extract_lexical_url_dataframe is ml_detector.extract_lexical_url_dataframe
+    assert train_url_inference.LEXICAL_URL_FEATURES is ml_detector.LEXICAL_URL_FEATURES
+
+
+@pytest.mark.parametrize("url, expected", [
+    ("https://www.example.com/", "https://example.com/"),
+    ("https://example.com/", "https://example.com/"),
+    ("http://WWW.Example.com/a?b=1", "http://Example.com/a?b=1"),
+    ("https://www2.example.com/", "https://www2.example.com/"),
+    ("https://shop.www.example.com/", "https://shop.www.example.com/"),
+])
+def test_www_neutral_candidate_normalization(url, expected):
+    from src.experiments.url_www_neutral_candidate import strip_www
+
+    assert strip_www(url) == expected
+    assert strip_www(strip_www(url)) == strip_www(url)
+
+
+def test_real_model_reproduces_recorded_validation_confusion():
+    """Held-out regression: the pinned model must still produce exactly the
+    validation confusion matrix recorded in its metadata."""
+    model = _real_model_or_skip()
+    _, metadata = ml_detector._load_model()
+    split = ml_detector.PROJECT_ROOT / "data/processed/url_splits/stratified_validation.csv"
+    frame = pd.read_csv(split, usecols=["URL", "label"])
+    probabilities = model.predict_proba(extract_lexical_url_dataframe(frame["URL"].astype(str)))[:, 1]
+    predicted = probabilities >= metadata["phishing_threshold"]
+    phishing = (frame["label"] == 0).to_numpy()
+    recorded = metadata["validation_results"][metadata["model_name"]]["confusion_matrix"]
+
+    assert int((~phishing & ~predicted).sum()) == recorded["true_legitimate_pred_legitimate"]
+    assert int((~phishing & predicted).sum()) == recorded["true_legitimate_pred_phishing"]
+    assert int((phishing & ~predicted).sum()) == recorded["true_phishing_pred_legitimate"]
+    assert int((phishing & predicted).sum()) == recorded["true_phishing_pred_phishing"]
+
+
+def test_acceptance_criteria_are_declared_and_require_real_data():
+    criteria = json.loads((ml_detector.PROJECT_ROOT / "configs/url_candidate_acceptance.json")
+                          .read_text())["criteria"]
+    assert criteria["phishing_recall_drop_max_pp"] <= 1.0
+    assert "REQUIRED" in criteria["real_off_template_legitimate_eval"]

@@ -202,3 +202,89 @@ legitimate URLs (`docs/url_data_acquisition_plan.md`).
 - `https://example.com/` and similar bare-domain sites are still MEDIUM, with an explanation.
 - Fixing the verdict needs a retrained model on licensed, representative legitimate URLs: bare apex,
   non-`www` subdomains, paths and `http`. It must then pass this guard's ceilings.
+
+## Retraining attempt: `www_neutral` candidate (2026-10-29)
+
+### Data check (blocker)
+
+- Raw PhiUSIIL contains **0 of 134,850** legitimate URLs outside `https://www.<host>`, and 0 with a
+  path or query.
+- The other licensed local data (the SMS splits) has 2 legitimate messages containing any URL.
+- No new data was downloaded; downloads await permission and a licence review.
+- So no genuine legitimate off-template URL exists for training or for measuring real false positives.
+
+**Split hygiene (verified):**
+- 0 duplicate URLs within any split, and 0 URL overlap between splits.
+- 0 conflicting labels among the raw duplicates.
+- Phishing share is 42.7% in every split.
+- Domain overlap with train: 7.7% of validation rows, 7.6% of test rows.
+- Training and serving use the same `extract_lexical_url_dataframe` (tested).
+
+### Acceptance criteria (declared before the run)
+
+`configs/url_candidate_acceptance.json`:
+- phishing-recall drop ≤ 1 pp, and the upper end of its 95% CI ≤ 2 pp;
+- in-template legitimate FPR increase ≤ 0.5 pp;
+- unseen-domain recall drop ≤ 1 pp;
+- OpenPhish recall drop ≤ 2 pp;
+- passes the shape guard with no exemption;
+- **required:** an FPR measured on genuine, licensed, off-template legitimate URLs.
+
+### Candidate
+
+- Strip a leading `www.` from the host before the *unchanged* feature extractor runs, in both training
+  and inference.
+- Same estimator and hyperparameters as production, seed 42, same splits.
+- **Command:** `python -m src.experiments.url_www_neutral_candidate`
+- **Results:** `reports/model_optimization/results/url_www_neutral_candidate.json`
+- **Artifact:** `models/candidates/url/c4_www_neutral/` (binary gitignored). SHA `70d486cc…`.
+  Retraining twice on the same machine gave byte-identical files; cross-machine reproducibility is
+  unverified.
+
+### Validation results (35,305 rows; test split not scored)
+
+| | Production (`2f2e1d49`) | www_neutral |
+|---|---|---|
+| Phishing recall | 0.9421 | **0.9666** (paired 95% CI of the change: +2.06 to +2.85 pp) |
+| Phishing precision | 0.9826 | 0.9916 |
+| Legitimate FPR (in-template) | 1.24% | 0.61% |
+| Recall, unseen-domain subset | 0.9368 | 0.9686 |
+| OpenPhish 2026-10-28 recall (300, local-only) | 95.0% | 93.3% (−5 URLs) |
+| Shape guard: as_is / drop_www | 1.3% / 84.5% | 0.4% / 0.4% |
+| Shape guard: http / path / query | 100% / 100% / 99.95% | 100% / 100% / 100% |
+| `https://example.com/`, `https://example.org/` | 0.9998 | 0.0267 |
+| `https://wikipedia.org/` vs `https://www.wikipedia.org/` | 0.9998 vs 0.019 | 0.0117 vs 0.0117 |
+
+### Decision: **not promoted** (predeclared criteria)
+
+**Failed criteria:**
+- **Shape guard:** `http` and paths are still flagged at 100%. Removing `www.` does not address the
+  scheme and path shortcuts, and fixing those needs data.
+- **Real off-template evaluation:** no data.
+
+**What the evidence does show:** on everything measurable, the candidate is better than production.
+It also removes the reported bare-domain false positive.
+
+**What it does not show:** that bare-domain or `http` legitimate URLs are classified correctly in
+the real world. That claim needs real data.
+
+**Practical blocker:** model binaries are gitignored and there is no LFS. Promotion would require
+the owner to retrain on their machine and re-pin the SHA-256.
+
+### If the owner decides to adopt a relative criterion ("no worse than production on every measured axis")
+
+This is an owner decision, not made here.
+1. Run `python -m src.experiments.url_www_neutral_candidate` on the deployment machine and record the
+   new SHA.
+2. Score the locked test split once, for both production and the candidate.
+3. Change the serving path to apply the same `strip_www` before feature extraction. Add a parity test.
+4. Update `MODEL_SHA256`, `metadata.json`, and add a reviewed `known_failing_models` entry for the
+   remaining http/path shortcut.
+
+### Still required to complete the fix
+
+Licensed legitimate URLs covering bare apex, non-`www` subdomains, `http`, paths and queries
+(`docs/url_data_acquisition_plan.md`). Then:
+- retrain with a host-grouped split;
+- evaluate on a time-stamped holdout;
+- pass every criterion above.

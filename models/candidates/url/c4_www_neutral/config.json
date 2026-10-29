@@ -1,0 +1,9 @@
+{
+  "normalization": "www_neutral",
+  "threshold": 0.5,
+  "seed": 42,
+  "estimator": "xgboost (production hyperparameters)",
+  "train_split": "stratified_train.csv",
+  "train_seconds": 5.7023562579997815,
+  "model_sha256": "70d486cc6ca1aa66c58a93b7557f95c7d3ac664399409805e944053c57a8b2fe"
+}

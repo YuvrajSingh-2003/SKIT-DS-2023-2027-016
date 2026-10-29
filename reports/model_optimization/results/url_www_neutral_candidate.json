@@ -1,0 +1,99 @@
+{
+  "model_sha256": {
+    "baseline": "2f2e1d492ec3bc96891df3c08d3e80ff158021f6321160e3d55a52707f2d2adc",
+    "www_neutral": "70d486cc6ca1aa66c58a93b7557f95c7d3ac664399409805e944053c57a8b2fe"
+  },
+  "train_seconds": 5.7023562579997815,
+  "baseline": {
+    "confusion": {
+      "tn": 19976,
+      "fp": 251,
+      "fn": 873,
+      "tp": 14205
+    },
+    "phishing_recall": 0.9421010744130521,
+    "phishing_precision": 0.9826369673491976,
+    "legitimate_fpr": 0.012409156078508924,
+    "unseen_domain_phishing_recall": 0.9367774274395667,
+    "unseen_domain_rows": 32589,
+    "openphish_recall": 0.95,
+    "shape_guard_flag_rate": {
+      "as_is": 0.013,
+      "drop_www": 0.8445,
+      "http_scheme": 1.0,
+      "add_path": 1.0,
+      "add_query": 0.9995
+    },
+    "shape_guard_status": "known_failing",
+    "diagnostic_urls": {
+      "https://example.com/": 0.9998,
+      "https://www.example.com/": 0.0122,
+      "https://example.org/": 0.9998,
+      "https://www.wikipedia.org/": 0.019,
+      "https://wikipedia.org/": 0.9998
+    }
+  },
+  "www_neutral": {
+    "confusion": {
+      "tn": 20104,
+      "fp": 123,
+      "fn": 504,
+      "tp": 14574
+    },
+    "phishing_recall": 0.9665738161559888,
+    "phishing_precision": 0.9916309450908348,
+    "legitimate_fpr": 0.006080980867157759,
+    "unseen_domain_phishing_recall": 0.9686312555582505,
+    "unseen_domain_rows": 32589,
+    "openphish_recall": 0.9333333333333333,
+    "shape_guard_flag_rate": {
+      "as_is": 0.004,
+      "drop_www": 0.004,
+      "http_scheme": 1.0,
+      "add_path": 1.0,
+      "add_query": 1.0
+    },
+    "shape_guard_status": "fail",
+    "diagnostic_urls": {
+      "https://example.com/": 0.0267,
+      "https://www.example.com/": 0.0267,
+      "https://example.org/": 0.0267,
+      "https://www.wikipedia.org/": 0.0117,
+      "https://wikipedia.org/": 0.0117
+    }
+  },
+  "acceptance": {
+    "phishing_recall_drop_pp": {
+      "value": -2.447,
+      "pass": true
+    },
+    "phishing_recall_drop_ci95_pp": {
+      "value": [
+        -2.845,
+        -2.056
+      ],
+      "pass": true
+    },
+    "in_template_fpr_increase_pp": {
+      "value": -0.633,
+      "pass": true
+    },
+    "unseen_domain_recall_drop_pp": {
+      "value": -3.185,
+      "pass": true
+    },
+    "url_shape_guard": {
+      "value": "fail",
+      "pass": false
+    },
+    "real_off_template_legitimate_eval": {
+      "value": "no licensed data available",
+      "pass": false
+    },
+    "openphish_recall_drop_pp": {
+      "value": 1.667,
+      "pass": true
+    }
+  },
+  "decision": "reject"
+}
