@@ -51,6 +51,32 @@ PATH_OR_QUERY_NOTE = (
 )
 
 
+# The URL model's legitimate training class is 100% https://www.<host> with no path
+# (docs/url_shape_guard.md). Its "phishing" label for any other shape is unvalidated:
+# e.g. https://example.com/ scores 0.9998 while https://www.example.com/ scores 0.012.
+# The verdict is unchanged (suppressing it would also hide ~45% of current phishing
+# feed URLs); the note tells the user why the flag is weak evidence.
+URL_SHAPE_NOTE = (
+    "The URL model flagged this URL, but its {reasons}; the model was trained on data "
+    "where every legitimate URL is https://www.<host>, so for this URL shape the flag "
+    "is unvalidated and is not evidence of phishing on its own"
+)
+
+
+def _untrained_shape_reasons(url: str) -> list[str]:
+    """Ways the scheme/host differ from the model's only legitimate training shape.
+
+    Path and query are covered separately by PATH_OR_QUERY_NOTE.
+    """
+    parsed = urlparse(url)
+    reasons = []
+    if not (parsed.hostname or "").lower().startswith("www."):
+        reasons.append("host has no 'www.' prefix")
+    if parsed.scheme.lower() != "https":
+        reasons.append("scheme is not HTTPS")
+    return reasons
+
+
 def _unavailable_blockchain_result(error: str | None = None) -> dict:
     return {
         "status": "unavailable",
@@ -123,6 +149,9 @@ def _build_scan_result(url: str) -> dict:
                     if risk_level == "SAFE":
                         risk_level = "MEDIUM"
                     findings.append(ML_PHISHING_ADVISORY)
+                    reasons = _untrained_shape_reasons(url)
+                    if reasons:
+                        findings.append(URL_SHAPE_NOTE.format(reasons=" and ".join(reasons)))
             message = "URL processed; URL model prediction is advisory, not a confirmed threat"
             # SAFE needs the registry check. With the registry unavailable, "no heuristic
             # findings + advisory model says legitimate" is not enough reassurance, so the

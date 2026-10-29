@@ -100,6 +100,14 @@ def _load_model():
                 "URL model artifact could not be loaded"
             ) from error
 
+        # predict_phishing reads column 1 as the phishing probability; that is
+        # only true if the classifier's classes are exactly [0, 1].
+        classes = getattr(model, "classes_", None)
+        if classes is None or [str(c) for c in classes] != ["0", "1"]:
+            raise ModelUnavailableError(
+                "URL model classes are not [0, 1]; phishing column is ambiguous"
+            )
+
         _loaded = (model, metadata)
         return _loaded
 

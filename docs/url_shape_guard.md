@@ -109,3 +109,96 @@ Three CI outcomes are reported distinctly:
     consulted.
 - **False-positive reduction:** unmeasured, because no licensed list is available.
 - **Bypass risk:** depends on the list's contents; see `reports/model_optimization/url_safety_log.md`.
+
+## Observed false positive: `https://example.com/` (investigated 2026-10-29)
+
+### Report
+
+The dashboard showed "Suspicious" for `https://example.com/` and `https://example.org/`, with the
+finding "URL model predicts phishing". It showed no issues for `https://www.example.com/`. All three
+use HTTPS with a root path and no IP address, and the registry reported no match.
+
+### Reproduction
+
+- **Model and pipeline evaluated:** pinned production model (SHA `2f2e1d49…`), with the same feature
+  path as serving (`ScanRequest` → `extract_lexical_url_dataframe` → `predict_proba[:, 1]`) and the
+  registry mocked as a miss.
+- **Command:** `python -m src.experiments.url_shape_false_positive_eval`. The output is in
+  `reports/model_optimization/results/url_shape_false_positive_eval.json`.
+
+| Input | Served as | p(phishing) | Model | Heuristic findings | Risk | Shape note |
+|---|---|---|---|---|---|---|
+| `https://example.com` | `https://example.com/` | 0.9998 | phishing | none | MEDIUM | yes |
+| `https://example.com/` | same | 0.9998 | phishing | none | MEDIUM | yes |
+| `https://www.example.com` | `https://www.example.com/` | 0.0122 | legitimate | none | SAFE | no |
+| `https://www.example.com/` | same | 0.0122 | legitimate | none | SAFE | no |
+| `https://example.org/` | same | 0.9998 | phishing | none | MEDIUM | yes |
+| `https://www.wikipedia.org` | `https://www.wikipedia.org/` | 0.0190 | legitimate | none | SAFE | no |
+| `https://wikipedia.org` | `https://wikipedia.org/` | 0.9998 | phishing | none | MEDIUM | yes |
+
+The scores and risk levels are identical before and after this change. The only difference is the
+added note.
+
+### Root cause (confirmed)
+
+**It is the model's learned shortcut, not the application pipeline.** Ruled out:
+- **Trailing slash / normalization:** `ScanRequest` turns `https://example.com` into
+  `https://example.com/`, and the feature code strips a root slash, so the features are identical.
+- **Feature order:** `metadata.feature_names` equals `LEXICAL_URL_FEATURES`. This is checked at load.
+- **Class index:** `classes_ == [0, 1]`, and the training target is phishing = 1. The detector now
+  also refuses a model whose classes are not exactly `[0, 1]`.
+- **Thresholds and aggregation:** the threshold is 0.5. The heuristics report nothing for these URLs.
+  MEDIUM comes only from the advisory model label.
+- **The guard:** `url_shape_guard` runs in tests and CI only. It does not, and never did, affect
+  inference.
+
+**Demonstrated cause:**
+- `www.` makes `NoOfSubDomain` 1 instead of 0. Changing only that feature moves `example.com` from
+  0.9998 to 0.0106.
+- In `stratified_train.csv`, **0 of 94,395** legitimate URLs have `NoOfSubDomain = 0`, compared with
+  9,702 phishing URLs. A bare apex domain is therefore phishing by construction of the PhiUSIIL data.
+
+### Candidate fix evaluated and rejected
+
+**Candidate:** "if the URL shape is outside the trained legitimate shape and only the model says
+phishing, report UNKNOWN instead of MEDIUM".
+
+**Effect** (same command):
+
+| Set | MEDIUM → UNKNOWN |
+|---|---|
+| validation phishing | 5,799 / 15,078 (38.5%) |
+| OpenPhish 2026-10-28 snapshot (local-only, licence review pending) | 135 / 300 (45.0%) |
+| validation legitimate | 0 (all are in-template) |
+
+The model cannot tell `example.com` from a phishing apex domain. No legitimate off-template training
+data exists, so any verdict-level suppression weakens real detections just as much. Allowlisting the
+example domains or `www.` was also ruled out. Retraining is not possible without representative
+legitimate URLs (`docs/url_data_acquisition_plan.md`).
+
+### Change made (verdict-neutral)
+
+- **`app/routes/scan.py`:** when the model says phishing and the host has no `www.` prefix and/or the
+  scheme is not HTTPS, a finding now names those reasons and states that the flag is unvalidated for
+  this shape.
+  - The risk level, `ml_label` and `ml_probability` are unchanged.
+  - Registry hits, heuristic HIGH, model-unavailable and registry-unavailable behaviour are
+    unchanged.
+  - Path and query keep their existing note.
+- **`app/services/ml_detector.py`:** the model is refused (reported as unavailable, never SAFE) if its
+  classes are not `[0, 1]`, so `predict_proba[:, 1]` is guaranteed to be the phishing probability.
+- **Tests:** `tests/test_url_shape_false_positive.py` (19 tests), offline. It covers:
+  - trailing slash, `www.`, root and non-root paths, `http`;
+  - registry hit / miss / unavailable;
+  - model unavailable;
+  - HIGH preserved;
+  - class and feature order.
+
+  It also characterizes the pinned model's shortcut; it skips if the artifact is absent. Run it with
+  `python -m pytest -q tests/test_url_shape_false_positive.py`.
+
+### Still unresolved
+
+- `https://example.com/` and similar bare-domain sites are still MEDIUM, with an explanation.
+- Fixing the verdict needs a retrained model on licensed, representative legitimate URLs: bare apex,
+  non-`www` subdomains, paths and `http`. It must then pass this guard's ceilings.

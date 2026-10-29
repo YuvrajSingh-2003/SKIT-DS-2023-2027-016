@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-29T04:11:44.265069+00:00",
+  "generated_at": "2026-10-29T05:50:32.658612+00:00",
   "model_sha256": "2f2e1d492ec3bc96891df3c08d3e80ff158021f6321160e3d55a52707f2d2adc",
   "nature": "controlled stress test on transformed legitimate validation URLs; not a real-world FPR",
-  "config_sha256": "28b7d2fe8a374ed3f1b248b4602b27e385b04edee7c58114f88d68f7e56d136e",
+  "config_sha256": "e9d65c6c34d44dd4f27c71fe69c1f2c40d45fc30007be5d18be0a94c358b85eb",
   "threshold": 0.5,
   "flag_rate": {
     "as_is": 0.013,

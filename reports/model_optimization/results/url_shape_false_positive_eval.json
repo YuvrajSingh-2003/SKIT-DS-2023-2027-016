@@ -1,0 +1,127 @@
+{
+  "model_sha256": "2f2e1d492ec3bc96891df3c08d3e80ff158021f6321160e3d55a52707f2d2adc",
+  "reported_urls": [
+    {
+      "input": "https://example.com",
+      "served": "https://example.com/",
+      "ml_probability": 0.9998,
+      "ml_label": "phishing",
+      "risk_level": "MEDIUM",
+      "heuristic_findings": [],
+      "shape_note": true,
+      "NoOfSubDomain": 0,
+      "URLLength": 19
+    },
+    {
+      "input": "https://example.com/",
+      "served": "https://example.com/",
+      "ml_probability": 0.9998,
+      "ml_label": "phishing",
+      "risk_level": "MEDIUM",
+      "heuristic_findings": [],
+      "shape_note": true,
+      "NoOfSubDomain": 0,
+      "URLLength": 19
+    },
+    {
+      "input": "https://www.example.com",
+      "served": "https://www.example.com/",
+      "ml_probability": 0.0122,
+      "ml_label": "legitimate",
+      "risk_level": "SAFE",
+      "heuristic_findings": [],
+      "shape_note": false,
+      "NoOfSubDomain": 1,
+      "URLLength": 23
+    },
+    {
+      "input": "https://www.example.com/",
+      "served": "https://www.example.com/",
+      "ml_probability": 0.0122,
+      "ml_label": "legitimate",
+      "risk_level": "SAFE",
+      "heuristic_findings": [],
+      "shape_note": false,
+      "NoOfSubDomain": 1,
+      "URLLength": 23
+    },
+    {
+      "input": "https://example.org/",
+      "served": "https://example.org/",
+      "ml_probability": 0.9998,
+      "ml_label": "phishing",
+      "risk_level": "MEDIUM",
+      "heuristic_findings": [],
+      "shape_note": true,
+      "NoOfSubDomain": 0,
+      "URLLength": 19
+    },
+    {
+      "input": "https://www.wikipedia.org",
+      "served": "https://www.wikipedia.org/",
+      "ml_probability": 0.019,
+      "ml_label": "legitimate",
+      "risk_level": "SAFE",
+      "heuristic_findings": [],
+      "shape_note": false,
+      "NoOfSubDomain": 1,
+      "URLLength": 25
+    },
+    {
+      "input": "https://wikipedia.org",
+      "served": "https://wikipedia.org/",
+      "ml_probability": 0.9998,
+      "ml_label": "phishing",
+      "risk_level": "MEDIUM",
+      "heuristic_findings": [],
+      "shape_note": true,
+      "NoOfSubDomain": 0,
+      "URLLength": 21
+    }
+  ],
+  "candidate": {
+    "validation_phishing": {
+      "rows": 15078,
+      "before": {
+        "MEDIUM": 14140,
+        "SAFE": 850,
+        "HIGH": 88
+      },
+      "after": {
+        "MEDIUM": 8341,
+        "UNKNOWN": 5799,
+        "SAFE": 850,
+        "HIGH": 88
+      },
+      "medium_to_unknown": 5799,
+      "medium_to_unknown_rate": 0.384600079586152
+    },
+    "validation_legitimate": {
+      "rows": 20227,
+      "before": {
+        "SAFE": 19966,
+        "MEDIUM": 261
+      },
+      "after": {
+        "SAFE": 19966,
+        "MEDIUM": 261
+      },
+      "medium_to_unknown": 0,
+      "medium_to_unknown_rate": 0.0
+    },
+    "openphish_20261028": {
+      "rows": 300,
+      "before": {
+        "MEDIUM": 285,
+        "SAFE": 15
+      },
+      "after": {
+        "UNKNOWN": 135,
+        "MEDIUM": 150,
+        "SAFE": 15
+      },
+      "medium_to_unknown": 135,
+      "medium_to_unknown_rate": 0.45
+    }
+  }
+}
