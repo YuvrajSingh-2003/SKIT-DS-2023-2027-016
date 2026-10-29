@@ -4,9 +4,12 @@ Purpose: reduce URL-model false positives on the bare homepages of
 well-established domains. The URL model is known to flag almost any URL that
 is not shaped like `https://www.<host>` (docs/url_shape_guard.md).
 
-What it does when it applies: the scan route does not let the URL model's
-*advisory* phishing label raise the risk level. It never sets a verdict:
-- it never returns or implies SAFE (popularity is not a safety label);
+What it does when it applies (only when the URL model says "phishing"):
+the scan route withholds the model's advisory, so the advisory no longer
+raises SAFE to MEDIUM, and adds a note to the findings. This DOES suppress
+a model warning. To avoid turning that into a safety claim:
+- a result that would otherwise be SAFE becomes UNKNOWN, never SAFE
+  (popularity is not a safety label);
 - the blockchain registry is still consulted first and a registry threat
   still wins;
 - heuristic findings still set the risk level as before.

@@ -10,6 +10,10 @@ permissions:
 jobs:
   url-shape-guard:
     runs-on: ubuntu-latest
+    env:
+      # Set to "1" (repository variable) once the model artifact is provisioned
+      # for CI; a missing model then FAILS instead of skipping.
+      CHAINSHIELD_REQUIRE_MODELS: ${{ vars.CHAINSHIELD_REQUIRE_MODELS || '0' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -20,9 +24,19 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # Guard logic, transforms, thresholds and exemption rules (no model needed).
-      # The deployed-model check is skipped here because *.joblib artifacts are
-      # gitignored. Where the artifact is provisioned, set
-      # CHAINSHIELD_REQUIRE_MODELS=1 so a missing model fails instead of skipping.
-      - name: Run URL shape guard tests
-        run: python -m pytest -q tests/test_url_shape_guard.py tests/test_reputation_precheck.py tests/test_url_eval_pipeline.py
+      - name: Report deployed-model guard mode
+        run: |
+          if [ -f models/url_inference/model.joblib ]; then
+            echo "::notice title=URL shape guard::model artifact present; deployed model WILL be evaluated"
+            echo "Deployed URL model: **evaluated**" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$CHAINSHIELD_REQUIRE_MODELS" = "1" ]; then
+            echo "::error title=URL shape guard::model artifact required but missing"
+            echo "Deployed URL model: **REQUIRED BUT MISSING (fail)**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning title=URL shape guard::model artifact absent (*.joblib is gitignored); deployed-model check SKIPPED, not evaluated"
+            echo "Deployed URL model: **SKIPPED — not evaluated** (artifact not provisioned)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # -rsP lists every skip reason and the evaluated model's checksum/rates.
+      - name: Run URL shape guard, pre-check and pipeline tests
+        run: python -m pytest -q -rsP tests/test_url_shape_guard.py tests/test_reputation_precheck.py tests/test_url_eval_pipeline.py

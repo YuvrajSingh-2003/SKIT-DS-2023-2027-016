@@ -65,8 +65,19 @@ def test_shape_invariant_model_passes_the_criterion():
 
 def test_gap_limit_catches_shape_dependence_below_the_ceiling():
     config = {**CONFIG, "max_flag_rate": {k: 1.0 for k in CONFIG["max_flag_rate"]}}
-    summary = {"flag_rate": {"as_is": 0.0, "drop_www": 0.04}}
+    summary = {"flag_rate": {name: 0.0 for name in guard.TRANSFORMS} | {"drop_www": 0.04}}
     assert guard.check(summary, config, None)["status"] == "fail"
+
+
+def test_unmeasured_transformation_fails():
+    rates = {name: 0.0 for name in guard.TRANSFORMS}
+    del rates["add_query"]
+    result = guard.check({"flag_rate": rates}, CONFIG, None)
+    assert result["status"] == "fail" and "add_query" in result["violations"][0]
+
+    # Even the exempt production artifact cannot skip a transformation.
+    sha = next(iter(CONFIG["known_failing_models"]))
+    assert guard.check({"flag_rate": rates}, CONFIG, sha)["status"] == "fail"
 
 
 def test_exemption_is_bound_to_one_artifact_and_ratchets():
@@ -88,11 +99,30 @@ def test_config_ceilings_cover_every_transform():
     assert all(0.0 < value < 1.0 for value in CONFIG["max_flag_rate"].values())
 
 
+def _require_model_or_skip(path):
+    if path.is_file():
+        return
+    if os.environ.get("CHAINSHIELD_REQUIRE_MODELS") == "1":
+        pytest.fail("URL-SHAPE-GUARD REQUIRED BUT MISSING: URL model artifact absent "
+                    "and CHAINSHIELD_REQUIRE_MODELS=1")
+    pytest.skip("URL-SHAPE-GUARD NOT EVALUATED: URL model artifact not present (gitignored); "
+                "set CHAINSHIELD_REQUIRE_MODELS=1 to require it")
+
+
+def test_missing_model_fails_when_required(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHAINSHIELD_REQUIRE_MODELS", "1")
+    with pytest.raises(pytest.fail.Exception, match="REQUIRED BUT MISSING"):
+        _require_model_or_skip(tmp_path / "absent.joblib")
+
+
+def test_missing_model_skips_visibly_when_not_required(monkeypatch, tmp_path):
+    monkeypatch.delenv("CHAINSHIELD_REQUIRE_MODELS", raising=False)
+    with pytest.raises(pytest.skip.Exception, match="NOT EVALUATED"):
+        _require_model_or_skip(tmp_path / "absent.joblib")
+
+
 def test_deployed_url_model_meets_shape_guard():
-    if not ml_detector.MODEL_PATH.is_file():
-        if os.environ.get("CHAINSHIELD_REQUIRE_MODELS") == "1":
-            pytest.fail("URL model artifact missing and CHAINSHIELD_REQUIRE_MODELS=1")
-        pytest.skip("URL model artifact not present (gitignored); set CHAINSHIELD_REQUIRE_MODELS=1 to require it")
+    _require_model_or_skip(ml_detector.MODEL_PATH)
 
     scorer, threshold, sha = guard.production_scorer()
     cases, summary = guard.run_guard(scorer, threshold, guard.sample_legitimate(CONFIG))
@@ -103,4 +133,7 @@ def test_deployed_url_model_meets_shape_guard():
         assert served == pytest.approx(float(scorer(pd.Series([url]))[0]), abs=1e-12)
 
     result = guard.check(summary, CONFIG, sha)
+    # Shown in CI via `pytest -rP`: proof the deployed model was actually evaluated.
+    print(f"URL-SHAPE-GUARD EVALUATED model_sha256={sha} threshold={threshold} "
+          f"status={result['status']} flag_rate={summary['flag_rate']}")
     assert result["status"] != "fail", result["violations"]

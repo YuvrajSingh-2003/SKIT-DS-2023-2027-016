@@ -1,5 +1,5 @@
 {
-  "_comment": "URL-shape regression guard. Controlled stress test, NOT a real-world false-positive estimate. See docs/url_shape_guard.md.",
+  "_comment": "URL-shape regression guard. PROVISIONAL engineering guardrails (decision 2026-10-29): controlled stress test on transformed legitimate validation URLs; NOT validated real-world performance thresholds and NOT a real-world false-positive estimate. See docs/url_shape_guard.md.",
   "source_split": "data/processed/url_splits/stratified_validation.csv",
   "source_split_sha256": "3d10e1836b7827ce56f54a1c75fe4ef0549e9b64c394f8bd9714b6ce8462f48d",
   "sample_size": 2000,
@@ -26,5 +26,7 @@
       "ratchet_tolerance": 0.02,
       "recorded_on": "2026-10-29, 2000-URL guard sample (seed 42)"
     }
-  }
+  },
+  "threshold_status": "provisional; retained by decision 2026-10-29; revisit once a representative time-stamped evaluation set exists",
+  "exemption_policy": "Exemptions are listed per exact model SHA-256 and are never extended automatically; any new checksum must meet the ceilings or receive a new, reviewed entry."
 }

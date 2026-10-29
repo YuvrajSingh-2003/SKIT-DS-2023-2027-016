@@ -16,7 +16,7 @@
 **Added:**
 - `src/evaluation/url_shape_guard.py`
 - `configs/url_shape_guard.json`
-- `tests/test_url_shape_guard.py` (10 tests)
+- `tests/test_url_shape_guard.py` (13 tests after finalization)
 - `.github/workflows/url_shape_guard.yml`
 - `docs/url_shape_guard.md`
 
@@ -44,7 +44,7 @@ replaced and all runs were repeated.
 
 **Added:**
 - `app/services/reputation_precheck.py`
-- `tests/test_reputation_precheck.py` (40 tests)
+- `tests/test_reputation_precheck.py` (38 tests)
 - `src/experiments/reputation_precheck_bypass.py`
 
 **Route change** (`app/routes/scan.py`, +17/−3):
@@ -96,3 +96,29 @@ replaced and all runs were repeated.
   `CHAINSHIELD_REQUIRE_MODELS=1 pytest tests/test_url_shape_guard.py -k deployed` → passed.
 - **Production SHAs unchanged:** URL `2f2e1d49…`, SMS `9f753dd5…`.
 - `src/blockchain`, `contracts` and `data/threat_registry` are untouched.
+
+## Finalization (2026-10-29)
+
+**Decisions recorded:**
+- 5% / 3-point limits retained as **provisional engineering guardrails**, not validated real-world
+  thresholds.
+- Production exemption limited to SHA `2f2e1d49…` and documented as a known failure. It is never
+  extended automatically.
+- Pre-check stays disabled.
+- No external downloads.
+
+**Changes:**
+- The guard fails if any transformation is unmeasured.
+- CI reports evaluated / skipped / required-but-missing distinctly:
+  - annotations and step summary;
+  - `pytest -rsP` with an `EVALUATED model_sha256=…` line;
+  - both missing-model paths unit-tested via a non-existent path.
+- Pre-check docstring corrected. It does suppress the model warning, and SAFE becomes UNKNOWN.
+- Pipeline test asserts that the manifest provenance and dedupe fields are present.
+
+**Tests:**
+- Full suite: **685 passed**. That is 624 before this branch plus 61 new: 13 guard + 38 pre-check +
+  10 pipeline.
+- The earlier "682 / 58 new" was accurate at `b69f4fd`, but the per-file split above it said 40
+  pre-check tests; the actual count is 38.
+- With `CHAINSHIELD_REQUIRE_MODELS=1`: 13/13 guard tests passed, with the deployed model evaluated.

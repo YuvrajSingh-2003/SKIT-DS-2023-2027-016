@@ -126,6 +126,9 @@ def check(summary: dict, config: dict, model_sha256: str | None) -> dict:
     status: "pass" | "fail" | "known_failing" (exempt artifact within its ratchet)
     """
     rates = summary["flag_rate"]
+    missing = sorted(set(TRANSFORMS) - set(rates))
+    if missing:
+        return {"status": "fail", "violations": [f"transformations not measured: {missing}"]}
     target_violations = [
         f"{name}: {rate:.4f} > max {config['max_flag_rate'][name]:.4f}"
         for name, rate in rates.items() if rate > config["max_flag_rate"][name]

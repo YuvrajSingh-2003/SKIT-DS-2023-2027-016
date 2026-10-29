@@ -11,6 +11,11 @@
 
 ## Transformations
 
+All four non-control transformations must be measured. If any one is missing, including for the exempt
+model, the check fails. Every run records the evaluated model's SHA-256:
+- in `reports/url_shape_guard/*_summary.json` (`model_sha256`);
+- in the CI log line `URL-SHAPE-GUARD EVALUATED model_sha256=…`.
+
 All are deterministic. Each URL's suffix is chosen from its SHA-256. Every suffix is checked against
 the feature code's suspicious keywords.
 
@@ -25,7 +30,11 @@ the feature code's suspicious keywords.
 The per-URL record is in `reports/url_shape_guard/<model>_cases.csv`: original URL, transformation,
 transformed URL, probability and label.
 
-## Criterion (`configs/url_shape_guard.json`, proposed — review required)
+## Criterion (`configs/url_shape_guard.json`)
+
+**Status:** provisional engineering guardrails, retained by decision on 2026-10-29.
+- They are **not** validated real-world performance thresholds.
+- Revisit them once a representative, time-stamped evaluation set exists.
 
 - Flag rate ≤ **5%** for every transformation.
 - Rate minus the `as_is` rate ≤ **3 points**.
@@ -58,6 +67,9 @@ the config; the tests read them.
 
 - The deployed model fails the target. The test would fail on every run unless that artifact is
   exempted.
+- **Status: documented known failure.** The production model has the shape shortcut.
+- The exemption is never extended automatically. A new checksum must meet the ceilings, or get a new,
+  reviewed config entry.
 - `known_failing_models` exempts **only SHA `2f2e1d49…`**, and only within a ratchet: recorded rates
   + 0.02.
 - CI fails if:
@@ -68,7 +80,32 @@ the config; the tests read them.
 ## CI
 
 - `.github/workflows/url_shape_guard.yml` runs the guard, the pre-check and the pipeline tests.
+Three CI outcomes are reported distinctly:
+- **evaluated:** the CI log shows `URL-SHAPE-GUARD EVALUATED model_sha256=…`, and the step summary
+  says "evaluated".
+- **intentional skip:** the artifact is absent and `CHAINSHIELD_REQUIRE_MODELS` is not 1. You get a
+  `::warning::` annotation, a "SKIPPED — not evaluated" step summary, and a skip reason listed by
+  `pytest -rs`.
+- **required but missing:** `CHAINSHIELD_REQUIRE_MODELS=1` (repository variable) and no artifact. You
+  get a `::error::` annotation, and the test fails. Both missing-model paths are unit-tested against a
+  non-existent path.
+
 - `*.joblib` is gitignored, so on CI the deployed-model test **skips**. The logic tests, including a
   synthetic shape-dependent model that must fail, still run.
 - To enforce the model check, provision the artifact and set `CHAINSHIELD_REQUIRE_MODELS=1`. A
   missing model then fails instead of skipping. Locally the artifact exists, so the test runs.
+
+## Related: reputation pre-check (`app/services/reputation_precheck.py`)
+
+- **Disabled by default.** It is enabled only by `CHAINSHIELD_REPUTATION_PRECHECK=1` plus a local list
+  file. It must not be enabled in production without representative evaluation data.
+- **What it does when it applies:** it applies only to a bare homepage of an exactly-listed,
+  non-hosting domain, and only when the model says "phishing".
+  - It **suppresses the model's phishing warning**: the advisory finding is replaced by a note, and the
+    advisory no longer raises SAFE to MEDIUM.
+  - A result that would otherwise be SAFE becomes **UNKNOWN**. Popularity never produces SAFE.
+  - Heuristic findings still set MEDIUM/HIGH.
+  - The registry is checked first; a threat match returns HIGH, and the model and pre-check are not
+    consulted.
+- **False-positive reduction:** unmeasured, because no licensed list is available.
+- **Bypass risk:** depends on the list's contents; see `reports/model_optimization/url_safety_log.md`.

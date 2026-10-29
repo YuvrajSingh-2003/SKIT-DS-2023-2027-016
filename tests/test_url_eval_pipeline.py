@@ -79,6 +79,10 @@ def test_build_removes_training_overlap_and_writes_manifest(tmp_path, split):
     manifest = json.loads((out / "manifest.json").read_text())
     assert sorted(rows["canonical_url"]) == ["https://fresh.org/docs?p=1", "https://new-phish.xyz/"]
     assert manifest["usage"] == "evaluation_only"
+    for source in manifest["sources"]:
+        assert {"source_name", "licence", "source_url", "retrieved_at", "sha256", "file"} <= set(source)
+    assert manifest["dedupe"]["key"] == "canonical_url"
+    assert {"exact_duplicates_dropped", "label_conflict_urls_dropped"} <= set(manifest["dedupe"])
     assert manifest["training_overlap"]["url_overlap_dropped"] == 1
     assert manifest["training_overlap"]["host_overlap_dropped"] == 1  # trained.com via www-stripped host
     assert manifest["urls_sha256"] == hashlib.sha256((out / "urls.csv").read_bytes()).hexdigest()
