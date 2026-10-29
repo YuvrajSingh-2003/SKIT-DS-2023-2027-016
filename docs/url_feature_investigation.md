@@ -293,3 +293,50 @@ hosts = off.url[model.predict_proba(X(off.url))[:, 1] >= 0.5].map(
     lambda u: "https://www." + (urlsplit(u).hostname or "").removeprefix("www."))
 print((model.predict_proba(X(hosts))[:, 1] >= 0.5).mean())              # -> 0.068
 ```
+
+## 8. Results of the proposed experiment (2026-10-29)
+
+- **Command:** `python -m src.experiments.url_v2_arms`
+- **Results:** `reports/model_optimization/results/url_v2_arms_validation.json`
+- **Feature extractor:** experiment-only `src/experiments/url_lexical_v2.py` (spec `url_lexical_v2.0`;
+  tests in `tests/test_url_lexical_v2.py`, including a host-block invariance test with a negative
+  control).
+- **Setup:**
+  - Data: PhiUSIIL + Hannousse only. **L2+D is blocked**; see `docs/dephides_licence_audit.md`.
+  - Splits, leakage removal and seed are identical to `train_url_multisource.py`.
+  - XGBoost with production hyperparameters and no imputer.
+  - Acceptance: the **unchanged** `configs/url_candidate_acceptance.json`.
+  - Validation only; the locked test splits were not scored.
+
+| Arm | PhiUSIIL recall | PhiUSIIL FPR | Hannousse recall / precision / F1 | Off-template legit FPR (n=722) | Bare root (n=60) | http (n=503) | Path/query (n=555) | In-template (n=134) | OpenPhish recall | Shape guard |
+|---|---|---|---|---|---|---|---|---|---|---|
+| B0 production | 0.9421 | 1.24% | 0.968 / 0.535 / 0.689 | 98.2% | 78.3% | 100% | 100% | 1.5% | 95.0% | known failing |
+| H1 host block only | 0.6612 | 3.73% | 0.496 / 0.763 / 0.601 | 17.3% | 23.3% | 19.7% | 18.7% | 3.7% | 67.7% | **pass** |
+| L1 host + path/query + scheme | 0.9850 | 0.02% | 0.968 / 0.632 / 0.765 | 57.3% | 80.0% | 53.5% | 49.6% | **47.0%** | 98.3% | fail |
+| L2 = L1, PhiUSIIL path/query/scheme masked | 0.5288 | 2.06% | 0.802 / 0.858 / **0.829** | **15.4%** | 16.7% | 18.7% | 17.3% | 0.7% | 72.0% | fail (path 18.4%) |
+
+Wilson intervals are in the results JSON.
+
+**Decision: all three arms rejected.**
+- H1 fails every gate except the shape guard.
+- L1 passes the PhiUSIIL recall gates but fails the real off-template FPR gate and the shape guard.
+- L2 fails the recall gates and the FPR gates.
+
+**Interpretation** (the rule predeclared in §6):
+- **Separating host and path alone (L1) does not remove the shortcut.** With unmasked PhiUSIIL rows,
+  L1 reaches 0.02% FPR on PhiUSIIL but flags 47% of Hannousse's *in-template* legitimate URLs and 80%
+  of bare roots. The model separates the two *sources*, not phishing from legitimate.
+- **Masking (L2) removes the confound.** It gives the best real-data F1 of any model so far (0.829,
+  vs c8 0.804 and production 0.689), and `https://example.com/` scores 0.018. But it loses PhiUSIIL
+  recall (0.529): PhiUSIIL's genuine path and scheme signal cannot be learned without legitimate
+  examples that have paths.
+- **L2's off-template FPR (15.4%) is close to c8's (12.6%).** By §6's rule, **data volume, not
+  representation, is the binding limit** at about 3k representative legitimate training URLs.
+- **The next step is data, not features.** We need licensed legitimate URLs with diverse shapes, at
+  the volume estimated in §6 (≥ 13k across ≥ 2k domains). DEPHIDES would supply that volume but is
+  blocked on licensing.
+
+**Unchanged:** the production model (`2f2e1d49…`), `metadata.json`, inference, the 0.5 threshold,
+the acceptance criteria, SMS, blockchain and the reputation pre-check. `train_url_multisource.py` was
+refactored (`evaluate_probabilities`) with no behaviour change: re-running it reproduced the committed
+results JSON exactly, and the candidate model checksums were identical.

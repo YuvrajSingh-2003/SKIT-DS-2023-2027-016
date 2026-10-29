@@ -1,0 +1,904 @@
+{
+  "split": "validation",
+  "data_report": {
+    "rows": 11430,
+    "label_conflict_urls_dropped": 0,
+    "exact_duplicates_dropped": 1,
+    "rows_by_split": {
+      "train": 8027,
+      "validation": 1701,
+      "test": 1701
+    },
+    "group_overlap_between_splits": {
+      "train-validation": 0,
+      "train-test": 0,
+      "validation-test": 0
+    }
+  },
+  "training_rows": 171042,
+  "feature_spec": "url_lexical_v2.0",
+  "models": {
+    "production": {
+      "model_sha256": "2f2e1d492ec3bc96891df3c08d3e80ff158021f6321160e3d55a52707f2d2adc",
+      "phiusiil": {
+        "overall": {
+          "confusion": {
+            "tn": 19976,
+            "fp": 251,
+            "fn": 873,
+            "tp": 14205
+          },
+          "phishing_recall": 0.9421010744130521,
+          "phishing_precision": 0.9826369673491976,
+          "phishing_f1": 0.9619421683483442,
+          "legitimate_fpr": 0.012409156078508924
+        },
+        "legitimate_fpr_by_shape": {
+          "in_template": {
+            "rows": 20227,
+            "flagged": 251,
+            "fpr": 0.012409156078508924,
+            "ci95": [
+              0.010973448867642586,
+              0.0140300388765351
+            ]
+          },
+          "bare_root": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "no_www": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "http": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "path_or_query": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          }
+        },
+        "off_template_legitimate": {
+          "rows": 0,
+          "flagged": 0,
+          "fpr": null,
+          "ci95": null
+        },
+        "unseen_domains": {
+          "rows": 24992,
+          "confusion": {
+            "tn": 18832,
+            "fp": 239,
+            "fn": 102,
+            "tp": 5819
+          },
+          "phishing_recall": 0.9827731802060463,
+          "phishing_precision": 0.9605480356553318,
+          "phishing_f1": 0.9715335169880623,
+          "legitimate_fpr": 0.012532116826595354
+        }
+      },
+      "hannousse": {
+        "overall": {
+          "confusion": {
+            "tn": 145,
+            "fp": 711,
+            "fn": 27,
+            "tp": 818
+          },
+          "phishing_recall": 0.9680473372781065,
+          "phishing_precision": 0.5349901896664486,
+          "phishing_f1": 0.6891322662173547,
+          "legitimate_fpr": 0.830607476635514
+        },
+        "legitimate_fpr_by_shape": {
+          "in_template": {
+            "rows": 134,
+            "flagged": 2,
+            "fpr": 0.014925373134328358,
+            "ci95": [
+              0.004102578410135577,
+              0.052785908084507546
+            ]
+          },
+          "bare_root": {
+            "rows": 60,
+            "flagged": 47,
+            "fpr": 0.7833333333333333,
+            "ci95": [
+              0.6637973165265748,
+              0.8687707895359299
+            ]
+          },
+          "no_www": {
+            "rows": 241,
+            "flagged": 228,
+            "fpr": 0.946058091286307,
+            "ci95": [
+              0.9099100312747984,
+              0.9682087197871124
+            ]
+          },
+          "http": {
+            "rows": 503,
+            "flagged": 503,
+            "fpr": 1.0,
+            "ci95": [
+              0.9924205116549235,
+              1.0000000000000002
+            ]
+          },
+          "path_or_query": {
+            "rows": 555,
+            "flagged": 555,
+            "fpr": 1.0,
+            "ci95": [
+              0.9931257801852976,
+              1.0
+            ]
+          }
+        },
+        "off_template_legitimate": {
+          "rows": 722,
+          "flagged": 709,
+          "fpr": 0.981994459833795,
+          "ci95": [
+            0.9694390406527753,
+            0.989447856984395
+          ]
+        },
+        "unseen_domains": {
+          "rows": 1313,
+          "confusion": {
+            "tn": 129,
+            "fp": 545,
+            "fn": 15,
+            "tp": 624
+          },
+          "phishing_recall": 0.9765258215962441,
+          "phishing_precision": 0.5337895637296834,
+          "phishing_f1": 0.6902654867256637,
+          "legitimate_fpr": 0.8086053412462908
+        }
+      },
+      "openphish_recall": 0.95,
+      "shape_guard": {
+        "flag_rate": {
+          "as_is": 0.013,
+          "drop_www": 0.8445,
+          "http_scheme": 1.0,
+          "add_path": 1.0,
+          "add_query": 0.9995
+        },
+        "status": "known_failing"
+      },
+      "diagnostic_urls": {
+        "https://example.com/": 0.9998,
+        "https://www.example.com/": 0.0122,
+        "https://example.org/": 0.9998,
+        "https://wikipedia.org/": 0.9998,
+        "https://www.wikipedia.org/": 0.019,
+        "http://example.com/": 1.0,
+        "https://example.com/docs/intro?lang=en": 1.0,
+        "http://192.168.1.1/secure/login.php?acct=1": 1.0
+      }
+    },
+    "H1_host_only": {
+      "model_sha256": "92260c27e7b5bd43937e2fc12097f168090d547f8b65fa1b18e26c16c0479943",
+      "phiusiil": {
+        "overall": {
+          "confusion": {
+            "tn": 19473,
+            "fp": 754,
+            "fn": 5109,
+            "tp": 9969
+          },
+          "phishing_recall": 0.6611619578193394,
+          "phishing_precision": 0.9296838571295346,
+          "phishing_f1": 0.7727607457075307,
+          "legitimate_fpr": 0.03727690710436545
+        },
+        "legitimate_fpr_by_shape": {
+          "in_template": {
+            "rows": 20227,
+            "flagged": 754,
+            "fpr": 0.03727690710436545,
+            "ci95": [
+              0.034752818358394326,
+              0.039976727247854706
+            ]
+          },
+          "bare_root": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "no_www": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "http": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "path_or_query": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          }
+        },
+        "off_template_legitimate": {
+          "rows": 0,
+          "flagged": 0,
+          "fpr": null,
+          "ci95": null
+        },
+        "unseen_domains": {
+          "rows": 24992,
+          "confusion": {
+            "tn": 18484,
+            "fp": 587,
+            "fn": 4178,
+            "tp": 1743
+          },
+          "phishing_recall": 0.2943759500084445,
+          "phishing_precision": 0.748068669527897,
+          "phishing_f1": 0.4224942431220458,
+          "legitimate_fpr": 0.030779717896282314
+        }
+      },
+      "hannousse": {
+        "overall": {
+          "confusion": {
+            "tn": 726,
+            "fp": 130,
+            "fn": 426,
+            "tp": 419
+          },
+          "phishing_recall": 0.4958579881656805,
+          "phishing_precision": 0.7632058287795993,
+          "phishing_f1": 0.6011477761836442,
+          "legitimate_fpr": 0.15186915887850466
+        },
+        "legitimate_fpr_by_shape": {
+          "in_template": {
+            "rows": 134,
+            "flagged": 5,
+            "fpr": 0.03731343283582089,
+            "ci95": [
+              0.016041274761645144,
+              0.08437543543324523
+            ]
+          },
+          "bare_root": {
+            "rows": 60,
+            "flagged": 14,
+            "fpr": 0.23333333333333334,
+            "ci95": [
+              0.1443943161843107,
+              0.3543651134039202
+            ]
+          },
+          "no_www": {
+            "rows": 241,
+            "flagged": 114,
+            "fpr": 0.4730290456431535,
+            "ci95": [
+              0.4109118240582757,
+              0.5359926235519341
+            ]
+          },
+          "http": {
+            "rows": 503,
+            "flagged": 99,
+            "fpr": 0.19681908548707752,
+            "ci95": [
+              0.16442617511104965,
+              0.23380790827910616
+            ]
+          },
+          "path_or_query": {
+            "rows": 555,
+            "flagged": 104,
+            "fpr": 0.1873873873873874,
+            "ci95": [
+              0.1571113868458205,
+              0.2219613235608493
+            ]
+          }
+        },
+        "off_template_legitimate": {
+          "rows": 722,
+          "flagged": 125,
+          "fpr": 0.1731301939058172,
+          "ci95": [
+            0.14728006771428004,
+            0.2024403120490182
+          ]
+        },
+        "unseen_domains": {
+          "rows": 1313,
+          "confusion": {
+            "tn": 618,
+            "fp": 56,
+            "fn": 391,
+            "tp": 248
+          },
+          "phishing_recall": 0.38810641627543035,
+          "phishing_precision": 0.8157894736842105,
+          "phishing_f1": 0.5259809119830329,
+          "legitimate_fpr": 0.0830860534124629
+        }
+      },
+      "openphish_recall": 0.6766666666666666,
+      "shape_guard": {
+        "flag_rate": {
+          "as_is": 0.0365,
+          "drop_www": 0.0365,
+          "http_scheme": 0.0365,
+          "add_path": 0.0365,
+          "add_query": 0.0365
+        },
+        "status": "pass"
+      },
+      "diagnostic_urls": {
+        "https://example.com/": 0.2429,
+        "https://www.example.com/": 0.2429,
+        "https://example.org/": 0.2284,
+        "https://wikipedia.org/": 0.1861,
+        "https://www.wikipedia.org/": 0.1861,
+        "http://example.com/": 0.2429,
+        "https://example.com/docs/intro?lang=en": 0.2429,
+        "http://192.168.1.1/secure/login.php?acct=1": 0.9995
+      }
+    },
+    "L1_lexical_v2": {
+      "model_sha256": "a269382f01afaf264ed41b8e818f73073e7bf251b9852fd08edc7d0e076217a4",
+      "phiusiil": {
+        "overall": {
+          "confusion": {
+            "tn": 20222,
+            "fp": 5,
+            "fn": 226,
+            "tp": 14852
+          },
+          "phishing_recall": 0.985011274704868,
+          "phishing_precision": 0.9996634583024837,
+          "phishing_f1": 0.9922832804409554,
+          "legitimate_fpr": 0.00024719434419340485
+        },
+        "legitimate_fpr_by_shape": {
+          "in_template": {
+            "rows": 20227,
+            "flagged": 5,
+            "fpr": 0.00024719434419340485,
+            "ci95": [
+              0.00010558956623992572,
+              0.0005785935376404388
+            ]
+          },
+          "bare_root": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "no_www": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "http": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "path_or_query": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          }
+        },
+        "off_template_legitimate": {
+          "rows": 0,
+          "flagged": 0,
+          "fpr": null,
+          "ci95": null
+        },
+        "unseen_domains": {
+          "rows": 24992,
+          "confusion": {
+            "tn": 19069,
+            "fp": 2,
+            "fn": 129,
+            "tp": 5792
+          },
+          "phishing_recall": 0.9782131396723527,
+          "phishing_precision": 0.9996548153261995,
+          "phishing_f1": 0.9888177550149382,
+          "legitimate_fpr": 0.0001048712705154423
+        }
+      },
+      "hannousse": {
+        "overall": {
+          "confusion": {
+            "tn": 379,
+            "fp": 477,
+            "fn": 27,
+            "tp": 818
+          },
+          "phishing_recall": 0.9680473372781065,
+          "phishing_precision": 0.6316602316602317,
+          "phishing_f1": 0.7644859813084112,
+          "legitimate_fpr": 0.5572429906542056
+        },
+        "legitimate_fpr_by_shape": {
+          "in_template": {
+            "rows": 134,
+            "flagged": 63,
+            "fpr": 0.4701492537313433,
+            "ci95": [
+              0.3876548616084964,
+              0.5543075067911741
+            ]
+          },
+          "bare_root": {
+            "rows": 60,
+            "flagged": 48,
+            "fpr": 0.8,
+            "ci95": [
+              0.6821795390818299,
+              0.8817161026314104
+            ]
+          },
+          "no_www": {
+            "rows": 241,
+            "flagged": 144,
+            "fpr": 0.5975103734439834,
+            "ci95": [
+              0.5345337730679097,
+              0.6574270701874848
+            ]
+          },
+          "http": {
+            "rows": 503,
+            "flagged": 269,
+            "fpr": 0.5347912524850894,
+            "ci95": [
+              0.49110213176130846,
+              0.5779529734234277
+            ]
+          },
+          "path_or_query": {
+            "rows": 555,
+            "flagged": 275,
+            "fpr": 0.4954954954954955,
+            "ci95": [
+              0.45407267376216504,
+              0.5369802471370666
+            ]
+          }
+        },
+        "off_template_legitimate": {
+          "rows": 722,
+          "flagged": 414,
+          "fpr": 0.5734072022160664,
+          "ci95": [
+            0.5370355683143276,
+            0.6090018040269655
+          ]
+        },
+        "unseen_domains": {
+          "rows": 1313,
+          "confusion": {
+            "tn": 293,
+            "fp": 381,
+            "fn": 25,
+            "tp": 614
+          },
+          "phishing_recall": 0.9608763693270735,
+          "phishing_precision": 0.6170854271356784,
+          "phishing_f1": 0.7515299877600978,
+          "legitimate_fpr": 0.5652818991097923
+        }
+      },
+      "openphish_recall": 0.9833333333333333,
+      "shape_guard": {
+        "flag_rate": {
+          "as_is": 0.001,
+          "drop_www": 0.001,
+          "http_scheme": 1.0,
+          "add_path": 0.9655,
+          "add_query": 0.925
+        },
+        "status": "fail"
+      },
+      "diagnostic_urls": {
+        "https://example.com/": 0.6158,
+        "https://www.example.com/": 0.6158,
+        "https://example.org/": 0.673,
+        "https://wikipedia.org/": 0.6119,
+        "https://www.wikipedia.org/": 0.6119,
+        "http://example.com/": 0.6981,
+        "https://example.com/docs/intro?lang=en": 0.9187,
+        "http://192.168.1.1/secure/login.php?acct=1": 0.9999
+      }
+    },
+    "L2_lexical_v2_masked": {
+      "model_sha256": "09125fd88df8bff81cc76647081c6d47cb36af71c1811a81adbe2daa29fc205f",
+      "phiusiil": {
+        "overall": {
+          "confusion": {
+            "tn": 19811,
+            "fp": 416,
+            "fn": 7104,
+            "tp": 7974
+          },
+          "phishing_recall": 0.528849980103462,
+          "phishing_precision": 0.9504171632896306,
+          "phishing_f1": 0.6795636611556161,
+          "legitimate_fpr": 0.020566569436891283
+        },
+        "legitimate_fpr_by_shape": {
+          "in_template": {
+            "rows": 20227,
+            "flagged": 416,
+            "fpr": 0.020566569436891283,
+            "ci95": [
+              0.0186997218267193,
+              0.022615494639609025
+            ]
+          },
+          "bare_root": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "no_www": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "http": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          },
+          "path_or_query": {
+            "rows": 0,
+            "flagged": 0,
+            "fpr": null,
+            "ci95": null
+          }
+        },
+        "off_template_legitimate": {
+          "rows": 0,
+          "flagged": 0,
+          "fpr": null,
+          "ci95": null
+        },
+        "unseen_domains": {
+          "rows": 24992,
+          "confusion": {
+            "tn": 18924,
+            "fp": 147,
+            "fn": 4383,
+            "tp": 1538
+          },
+          "phishing_recall": 0.25975342003040025,
+          "phishing_precision": 0.912759643916914,
+          "phishing_f1": 0.4044175650801998,
+          "legitimate_fpr": 0.007708038382885009
+        }
+      },
+      "hannousse": {
+        "overall": {
+          "confusion": {
+            "tn": 744,
+            "fp": 112,
+            "fn": 167,
+            "tp": 678
+          },
+          "phishing_recall": 0.8023668639053254,
+          "phishing_precision": 0.8582278481012658,
+          "phishing_f1": 0.8293577981651377,
+          "legitimate_fpr": 0.1308411214953271
+        },
+        "legitimate_fpr_by_shape": {
+          "in_template": {
+            "rows": 134,
+            "flagged": 1,
+            "fpr": 0.007462686567164179,
+            "ci95": [
+              0.0013185304171489005,
+              0.04106054817741181
+            ]
+          },
+          "bare_root": {
+            "rows": 60,
+            "flagged": 10,
+            "fpr": 0.16666666666666666,
+            "ci95": [
+              0.09313077201321032,
+              0.28031851497207827
+            ]
+          },
+          "no_www": {
+            "rows": 241,
+            "flagged": 53,
+            "fpr": 0.21991701244813278,
+            "ci95": [
+              0.17224418061956795,
+              0.27637892917876694
+            ]
+          },
+          "http": {
+            "rows": 503,
+            "flagged": 94,
+            "fpr": 0.18687872763419483,
+            "ci95": [
+              0.15523182353596676,
+              0.22327222980140732
+            ]
+          },
+          "path_or_query": {
+            "rows": 555,
+            "flagged": 96,
+            "fpr": 0.17297297297297298,
+            "ci95": [
+              0.1437816624605251,
+              0.2066603948236857
+            ]
+          }
+        },
+        "off_template_legitimate": {
+          "rows": 722,
+          "flagged": 111,
+          "fpr": 0.15373961218836565,
+          "ci95": [
+            0.129267339917166,
+            0.18187713017107365
+          ]
+        },
+        "unseen_domains": {
+          "rows": 1313,
+          "confusion": {
+            "tn": 604,
+            "fp": 70,
+            "fn": 127,
+            "tp": 512
+          },
+          "phishing_recall": 0.8012519561815337,
+          "phishing_precision": 0.8797250859106529,
+          "phishing_f1": 0.8386568386568386,
+          "legitimate_fpr": 0.10385756676557864
+        }
+      },
+      "openphish_recall": 0.72,
+      "shape_guard": {
+        "flag_rate": {
+          "as_is": 0.022,
+          "drop_www": 0.022,
+          "http_scheme": 0.05,
+          "add_path": 0.184,
+          "add_query": 0.0375
+        },
+        "status": "fail"
+      },
+      "diagnostic_urls": {
+        "https://example.com/": 0.0182,
+        "https://www.example.com/": 0.0182,
+        "https://example.org/": 0.031,
+        "https://wikipedia.org/": 0.0186,
+        "https://www.wikipedia.org/": 0.0186,
+        "http://example.com/": 0.0464,
+        "https://example.com/docs/intro?lang=en": 0.3348,
+        "http://192.168.1.1/secure/login.php?acct=1": 0.9999
+      }
+    }
+  },
+  "acceptance": {
+    "H1_host_only": {
+      "gates": {
+        "phiusiil_recall_drop_pp": {
+          "value": 28.094,
+          "pass": false
+        },
+        "phiusiil_recall_drop_ci95_pp": {
+          "value": [
+            27.199,
+            28.983
+          ],
+          "pass": false
+        },
+        "phiusiil_in_template_fpr_increase_pp": {
+          "value": 2.487,
+          "pass": false
+        },
+        "phiusiil_unseen_domain_recall_drop_pp": {
+          "value": 68.84,
+          "pass": false
+        },
+        "url_shape_guard": {
+          "value": "pass",
+          "pass": true
+        },
+        "real_off_template_legitimate_fpr": {
+          "value": 0.1731,
+          "pass": false
+        },
+        "real_eval_phishing_f1_vs_baseline": {
+          "value": [
+            0.6011,
+            0.6891
+          ],
+          "pass": false
+        },
+        "real_fpr_bare_root": {
+          "value": 0.2333,
+          "pass": false
+        },
+        "real_fpr_no_www": {
+          "value": 0.473,
+          "pass": false
+        },
+        "real_fpr_http": {
+          "value": 0.1968,
+          "pass": false
+        },
+        "real_fpr_path_or_query": {
+          "value": 0.1874,
+          "pass": false
+        },
+        "openphish_recall_drop_pp": {
+          "value": 27.333,
+          "pass": false
+        }
+      },
+      "decision": "reject"
+    },
+    "L1_lexical_v2": {
+      "gates": {
+        "phiusiil_recall_drop_pp": {
+          "value": -4.291,
+          "pass": true
+        },
+        "phiusiil_recall_drop_ci95_pp": {
+          "value": [
+            -4.682,
+            -3.913
+          ],
+          "pass": true
+        },
+        "phiusiil_in_template_fpr_increase_pp": {
+          "value": -1.216,
+          "pass": true
+        },
+        "phiusiil_unseen_domain_recall_drop_pp": {
+          "value": 0.456,
+          "pass": true
+        },
+        "url_shape_guard": {
+          "value": "fail",
+          "pass": false
+        },
+        "real_off_template_legitimate_fpr": {
+          "value": 0.5734,
+          "pass": false
+        },
+        "real_eval_phishing_f1_vs_baseline": {
+          "value": [
+            0.7645,
+            0.6891
+          ],
+          "pass": true
+        },
+        "real_fpr_bare_root": {
+          "value": 0.8,
+          "pass": false
+        },
+        "real_fpr_no_www": {
+          "value": 0.5975,
+          "pass": false
+        },
+        "real_fpr_http": {
+          "value": 0.5348,
+          "pass": false
+        },
+        "real_fpr_path_or_query": {
+          "value": 0.4955,
+          "pass": false
+        },
+        "openphish_recall_drop_pp": {
+          "value": -3.333,
+          "pass": true
+        }
+      },
+      "decision": "reject"
+    },
+    "L2_lexical_v2_masked": {
+      "gates": {
+        "phiusiil_recall_drop_pp": {
+          "value": 41.325,
+          "pass": false
+        },
+        "phiusiil_recall_drop_ci95_pp": {
+          "value": [
+            40.496,
+            42.121
+          ],
+          "pass": false
+        },
+        "phiusiil_in_template_fpr_increase_pp": {
+          "value": 0.816,
+          "pass": false
+        },
+        "phiusiil_unseen_domain_recall_drop_pp": {
+          "value": 72.302,
+          "pass": false
+        },
+        "url_shape_guard": {
+          "value": "fail",
+          "pass": false
+        },
+        "real_off_template_legitimate_fpr": {
+          "value": 0.1537,
+          "pass": false
+        },
+        "real_eval_phishing_f1_vs_baseline": {
+          "value": [
+            0.8294,
+            0.6891
+          ],
+          "pass": true
+        },
+        "real_fpr_bare_root": {
+          "value": 0.1667,
+          "pass": false
+        },
+        "real_fpr_no_www": {
+          "value": 0.2199,
+          "pass": false
+        },
+        "real_fpr_http": {
+          "value": 0.1869,
+          "pass": false
+        },
+        "real_fpr_path_or_query": {
+          "value": 0.173,
+          "pass": false
+        },
+        "openphish_recall_drop_pp": {
+          "value": 23.0,
+          "pass": false
+        }
+      },
+      "decision": "reject"
+    }
+  },
+  "blocked_arms": {
+    "L2+D": "docs/dephides_licence_audit.md"
+  }
+}

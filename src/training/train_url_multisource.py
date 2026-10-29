@@ -160,7 +160,11 @@ def wilson(k: int, n: int) -> list[float] | None:
 
 
 def evaluate(model, neutral: bool, frame: pd.DataFrame, train_groups: set) -> dict:
-    p = model.predict_proba(features(frame["url"], neutral))[:, 1]
+    return evaluate_probabilities(model.predict_proba(features(frame["url"], neutral))[:, 1], frame, train_groups)
+
+
+def evaluate_probabilities(p: np.ndarray, frame: pd.DataFrame, train_groups: set) -> dict:
+    """Metrics for phishing probabilities p on frame (shared by all experiment arms)."""
     y = frame["phishing"].to_numpy()
     out = {"overall": binary_metrics(y, p)}
     shapes = pd.DataFrame([shape_groups(u) for u in frame["url"]])

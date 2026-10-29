@@ -1,0 +1,31 @@
+{
+  "feature_spec": "url_lexical_v2.0",
+  "features": [
+    "host_length",
+    "host_labels",
+    "host_subdomain_labels",
+    "registrable_length",
+    "max_label_length",
+    "host_digits",
+    "host_hyphens",
+    "host_entropy",
+    "registrable_entropy",
+    "host_max_digit_run",
+    "host_max_consonant_run",
+    "host_vowel_ratio",
+    "host_is_ip",
+    "host_has_punycode",
+    "tld_length",
+    "host_keyword",
+    "host_is_shortener",
+    "host_platform_hosted"
+  ],
+  "masked_for_phiusiil": [],
+  "estimator": "XGBClassifier (production hyperparameters, no imputer)",
+  "seed": 42,
+  "training_rows": 171042,
+  "hannousse_sha256": "21093e2902e5441c86a6daf95e86e7c332046e477fdf109a579d7bd81e586d6c",
+  "train_seconds": 0.6146609610004816,
+  "threshold": 0.5,
+  "model_sha256": "92260c27e7b5bd43937e2fc12097f168090d547f8b65fa1b18e26c16c0479943"
+}
