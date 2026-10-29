@@ -66,3 +66,26 @@ def test_evaluate_probabilities_counts():
     assert out["overall"]["confusion"] == {"tn": 1, "fp": 1, "fn": 1, "tp": 1}
     assert out["off_template_legitimate"] == {"rows": 1, "flagged": 1, "fpr": 1.0, "ci95": ms.wilson(1, 1)}
     assert out["unseen_domains"]["rows"] == 3
+
+
+# ── audit and learning-curve helpers ──────────────────────────────────
+
+def test_univariate_auc_is_direction_free_and_guards_degenerate_input():
+    from src.experiments.url_data_audit import univariate_auc
+
+    y = np.array([0, 0, 1, 1])
+    assert univariate_auc(pd.Series([1, 2, 3, 4]), y) == 1.0
+    assert univariate_auc(pd.Series([4, 3, 2, 1]), y) == 1.0
+    assert univariate_auc(pd.Series([1, 1, 1, 1]), y) is None
+    assert univariate_auc(pd.Series([1, 2, 3, 4]), np.array([0, 0, 0, 0])) is None
+
+
+def test_grouped_subsample_never_splits_a_domain_and_is_seeded():
+    from src.experiments.url_learning_curve import grouped_subsample
+
+    frame = pd.DataFrame({"group": ["a", "a", "b", "b", "c", "d"], "url": list("uvwxyz")})
+    part = grouped_subsample(frame, 0.5, seed=1)
+    assert part.equals(grouped_subsample(frame, 0.5, seed=1))
+    for g in part["group"].unique():
+        assert (frame["group"] == g).sum() == (part["group"] == g).sum()
+    assert part["group"].nunique() == 2

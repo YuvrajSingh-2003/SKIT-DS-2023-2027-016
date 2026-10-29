@@ -1,7 +1,8 @@
 # ChainShield — 10-minute demo
 
-> **Status of the URL false-positive bug (2026-10-29, commit `c0b5544` + this guide): UNRESOLVED at
-> the model level, mitigated in the UI.**
+> **Status of the URL false-positive bug (2026-10-29): UNRESOLVED at the model level, mitigated in
+> the UI. No candidate model passed the acceptance criteria, so none was promoted**
+> (`docs/url_false_positive_root_cause.md`).
 > - Bare domains such as `https://example.com/` and `https://wikipedia.org` are still scored
 >   phishing (p = 0.9998) by the production model (SHA-256 `2f2e1d49…`, threshold 0.5, both
 >   unchanged).
@@ -128,7 +129,31 @@ any chain.
 | Code defect (parsing, feature order, class index, slash, parity) | **None found**; each is covered by a regression test |
 | UI honesty: the model flag is advisory and explained for untrained shapes | **Done** (`bef33c1`) |
 | Shape regression guard in CI | **Done.** The production model is exempt only by its exact checksum |
-| Model fix | **Not done.** Eight retrained or alternative candidates (c4–c8, H1, L1, L2) all failed the predeclared acceptance gates. The binding limit is licensed, representative legitimate data (`docs/legitimate_url_collection_plan.md`) |
+| Model fix | **Not done.** No candidate passed the unchanged acceptance criteria (table below); the blocker is data |
+
+### 3c-bis. Baseline vs candidates
+
+Validation only; the locked test set was never used.
+
+| Model | PhiUSIIL phishing recall | Real off-template legit FPR (Hannousse, n=722) | `example.com/` score | Decision |
+|---|---|---|---|---|
+| **Production** (`2f2e1d49`) | 0.942 | **98.2%** | 0.9998 | in service (advisory) |
+| c5 (+ representative data) | 0.937 | 54.2% | 0.980 | rejected |
+| c7 (source-balanced) | 0.908 | 38.4% | 0.758 | rejected (recall −3.4 pp) |
+| L2 (v2 features, masked) | 0.529 | 15.4% | 0.018 | rejected (recall −41 pp) |
+| c8 (representative data only) | 0.531 | 12.6% | 0.632 | rejected (recall −41 pp) |
+
+Gate: ≤ 5% off-template FPR **and** a phishing-recall drop ≤ 1 pp.
+
+Some candidates score `example.com` low, but **none is a verified fix**. Each one either still flags
+most real legitimate URLs or misses far more phishing. Do not present L2's 0.018 as a correction.
+
+**Data vs model design** (`python -m src.experiments.url_learning_curve`):
+- XGBoost, random forest and logistic regression trained on the representative data all sit at
+  15–20% off-template FPR.
+- Tripling the data moved FPR only about 4 pp.
+- **The blocker is licensed, verified legitimate URLs and recent licensed phishing data**
+  (`docs/legitimate_url_collection_plan.md`, awaiting owner decisions D1–D5).
 
 ### 3d. Offline fallback (no UI, no network)
 
@@ -139,6 +164,9 @@ any chain.
 .venv/bin/python -m src.experiments.url_shape_false_positive_eval       # rows 1-5 of 3a (the IP row is checked by the smoke test)
 .venv/bin/python src/evaluation/offline_smoke.py                        # 13/13; includes the known issue
 ```
+
+Further evidence: `python -m src.experiments.url_data_audit` (feature and source audit) and
+`python -m src.experiments.url_learning_curve` (data vs model design).
 
 The guard figures are controlled stress tests on transformed URLs, **not** real-world
 false-positive rates.

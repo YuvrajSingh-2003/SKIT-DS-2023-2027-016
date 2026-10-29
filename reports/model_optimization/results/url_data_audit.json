@@ -1,0 +1,308 @@
+{
+  "rows": {
+    "hannousse": {
+      "legitimate": 4003,
+      "phishing": 4024
+    },
+    "phiusiil": {
+      "legitimate": 94395,
+      "phishing": 70364
+    }
+  },
+  "shape_share_by_source_and_label": {
+    "hannousse/legitimate": {
+      "in_template": 0.1669,
+      "bare_root": 0.1282,
+      "no_www": 0.3612,
+      "http": 0.5446,
+      "path_or_query": 0.6
+    },
+    "hannousse/phishing": {
+      "in_template": 0.003,
+      "bare_root": 0.1784,
+      "no_www": 0.8039,
+      "http": 0.6568,
+      "path_or_query": 0.8101
+    },
+    "phiusiil/legitimate": {
+      "in_template": 1.0,
+      "bare_root": 0.0,
+      "no_www": 0.0,
+      "http": 0.0,
+      "path_or_query": 0.0
+    },
+    "phiusiil/phishing": {
+      "in_template": 0.0106,
+      "bare_root": 0.3339,
+      "no_www": 0.5856,
+      "http": 0.5134,
+      "path_or_query": 0.2814
+    }
+  },
+  "source_only_label_auc_pooled": 0.5067065126456444,
+  "production_features_auc": {
+    "URLLength": {
+      "pooled": 0.7126740981888677,
+      "hannousse": 0.6766654320889552,
+      "phiusiil": 0.7131377898242119
+    },
+    "DomainLength": {
+      "pooled": 0.6253499029802929,
+      "hannousse": 0.639297831546817,
+      "phiusiil": 0.624840403878478
+    },
+    "IsDomainIP": {
+      "pooled": 0.5032733774264666,
+      "hannousse": 0.5070825049701789,
+      "phiusiil": 0.5030555397646523
+    },
+    "TLDLength": {
+      "pooled": 0.5240490152238867,
+      "hannousse": 0.5303665143786296,
+      "phiusiil": 0.5263769805078486
+    },
+    "NoOfSubDomain": {
+      "pooled": 0.5126959696893024,
+      "hannousse": 0.523767679955739,
+      "phiusiil": 0.5142836892209455
+    },
+    "NoOfLettersInURL": {
+      "pooled": 0.6596325094049584,
+      "hannousse": 0.6496899504794864,
+      "phiusiil": 0.6576524842906809
+    },
+    "LetterRatioInURL": {
+      "pooled": 0.6370323005941974,
+      "hannousse": 0.6440447994024362,
+      "phiusiil": 0.6362283767218422
+    },
+    "NoOfDegitsInURL": {
+      "pooled": 0.7276021520208927,
+      "hannousse": 0.7147014863107143,
+      "phiusiil": 0.7278200064619598
+    },
+    "DegitRatioInURL": {
+      "pooled": 0.7263351746650971,
+      "hannousse": 0.7140619932664816,
+      "phiusiil": 0.7260772506721604
+    },
+    "NoOfEqualsInURL": {
+      "pooled": 0.5315316516177157,
+      "hannousse": 0.6023977916165261,
+      "phiusiil": 0.5272866806889887
+    },
+    "NoOfQMarkInURL": {
+      "pooled": 0.5347048540411389,
+      "hannousse": 0.605251423013257,
+      "phiusiil": 0.5304559149565119
+    },
+    "NoOfAmpersandInURL": {
+      "pooled": 0.5170894447880665,
+      "hannousse": 0.5645303485109826,
+      "phiusiil": 0.5143184014552896
+    },
+    "NoOfOtherSpecialCharsInURL": {
+      "pooled": 0.7185603166185213,
+      "hannousse": 0.6395515242295913,
+      "phiusiil": 0.7220319557403603
+    },
+    "SpacialCharRatioInURL": {
+      "pooled": 0.6015914908165041,
+      "hannousse": 0.6537276155706282,
+      "phiusiil": 0.5980776174798105
+    },
+    "HasObfuscation": {
+      "pooled": 0.5122540528420536,
+      "hannousse": 0.5222960575294175,
+      "phiusiil": 0.5114902506963789
+    },
+    "IsHTTPS": {
+      "pooled": 0.7494954809483425,
+      "hannousse": 0.5561087943982371,
+      "phiusiil": 0.7566937638565175
+    },
+    "IsURLShortener": {
+      "pooled": 0.5035169920486139,
+      "hannousse": 0.5029821073558648,
+      "phiusiil": 0.5035476563239869
+    },
+    "URLDepth": {
+      "pooled": 0.6376870841313941,
+      "hannousse": 0.6319517941067063,
+      "phiusiil": 0.6357583423341482
+    },
+    "HasSuspiciousKeyword": {
+      "pooled": 0.5269585438839911,
+      "hannousse": 0.604976778102308,
+      "phiusiil": 0.5224478187233262
+    }
+  },
+  "v2_features_auc": {
+    "host_length": {
+      "pooled": 0.6944110700362868,
+      "hannousse": 0.699658966014058,
+      "phiusiil": 0.6937393920097481
+    },
+    "host_labels": {
+      "pooled": 0.7181350458302866,
+      "hannousse": 0.683256816830717,
+      "phiusiil": 0.7195031374976384
+    },
+    "host_subdomain_labels": {
+      "pooled": 0.7449365041876327,
+      "hannousse": 0.674941358593381,
+      "phiusiil": 0.748127668670792
+    },
+    "registrable_length": {
+      "pooled": 0.615963564255495,
+      "hannousse": 0.5198985328597985,
+      "phiusiil": 0.6224277242783585
+    },
+    "max_label_length": {
+      "pooled": 0.5739898167159158,
+      "hannousse": 0.6184952798820368,
+      "phiusiil": 0.5719727190013262
+    },
+    "host_digits": {
+      "pooled": 0.6649672829847783,
+      "hannousse": 0.6021224327778023,
+      "phiusiil": 0.6684779280014851
+    },
+    "host_hyphens": {
+      "pooled": 0.6207541486796793,
+      "hannousse": 0.585927198487814,
+      "phiusiil": 0.6227079698006709
+    },
+    "host_entropy": {
+      "pooled": 0.687290529519773,
+      "hannousse": 0.6755352844213758,
+      "phiusiil": 0.6875611248347182
+    },
+    "registrable_entropy": {
+      "pooled": 0.5994016152939035,
+      "hannousse": 0.5337504699507178,
+      "phiusiil": 0.6062936421180638
+    },
+    "host_max_digit_run": {
+      "pooled": 0.6643011325485468,
+      "hannousse": 0.6018370479098927,
+      "phiusiil": 0.66779269180781
+    },
+    "host_max_consonant_run": {
+      "pooled": 0.5840367499953437,
+      "hannousse": 0.5811290140744342,
+      "phiusiil": 0.5843420131188062
+    },
+    "host_vowel_ratio": {
+      "pooled": 0.5501132955835148,
+      "hannousse": 0.539263792712126,
+      "phiusiil": 0.5507718365629989
+    },
+    "host_is_ip": {
+      "pooled": 0.5032733774264666,
+      "hannousse": 0.5070825049701789,
+      "phiusiil": 0.5030555397646523
+    },
+    "host_has_punycode": {
+      "pooled": 0.5008133032209496,
+      "hannousse": 0.5011182902584493,
+      "phiusiil": 0.5007958615200955
+    },
+    "tld_length": {
+      "pooled": 0.5212340718037323,
+      "hannousse": 0.5362031533010282,
+      "phiusiil": 0.5237601447042736
+    },
+    "host_keyword": {
+      "pooled": 0.5066436530511913,
+      "hannousse": 0.5121730272871887,
+      "phiusiil": 0.5063174111285335
+    },
+    "host_is_shortener": {
+      "pooled": 0.5035169920486139,
+      "hannousse": 0.5029821073558648,
+      "phiusiil": 0.5035476563239869
+    },
+    "host_platform_hosted": {
+      "pooled": 0.6164349754880465,
+      "hannousse": 0.5592554465860347,
+      "phiusiil": 0.6193294866693195
+    },
+    "path_length": {
+      "pooled": 0.7865239880996484,
+      "hannousse": 0.5702124375902964,
+      "phiusiil": 0.7985688704451139
+    },
+    "path_depth": {
+      "pooled": 0.6376870841313941,
+      "hannousse": 0.6319517941067063,
+      "phiusiil": 0.6357583423341482
+    },
+    "path_digits": {
+      "pooled": 0.5696003172277103,
+      "hannousse": 0.6020015617014873,
+      "phiusiil": 0.5669092149394577
+    },
+    "path_special": {
+      "pooled": 0.5749497517936434,
+      "hannousse": 0.541875123230142,
+      "phiusiil": 0.5767580012506395
+    },
+    "path_percent_encoded": {
+      "pooled": 0.5043705903367889,
+      "hannousse": 0.5031225648854811,
+      "phiusiil": 0.5042493320447956
+    },
+    "path_has_file_extension": {
+      "pooled": 0.555648149620293,
+      "hannousse": 0.5748050108045208,
+      "phiusiil": 0.5535501108521403
+    },
+    "path_keyword": {
+      "pooled": 0.5207316247146087,
+      "hannousse": 0.5942948044930517,
+      "phiusiil": 0.516485702916264
+    },
+    "query_length": {
+      "pooled": 0.5343690786866974,
+      "hannousse": 0.6058519604332536,
+      "phiusiil": 0.5301361491671878
+    },
+    "query_params": {
+      "pooled": 0.5343639513103373,
+      "hannousse": 0.6054675879273448,
+      "phiusiil": 0.5301361491671878
+    },
+    "query_max_value_length": {
+      "pooled": 0.5294992537180591,
+      "hannousse": 0.597624656755942,
+      "phiusiil": 0.5254462509237678
+    },
+    "has_fragment": {
+      "pooled": 0.5040975171234956,
+      "hannousse": 0.5002335164630503,
+      "phiusiil": 0.5042777556705134
+    },
+    "url_has_userinfo": {
+      "pooled": 0.5000403290853364,
+      "hannousse": null,
+      "phiusiil": 0.5000426354385765
+    },
+    "path_double_slash": {
+      "pooled": 0.5020584234622828,
+      "hannousse": 0.5018631652503167,
+      "phiusiil": 0.5020678187709624
+    },
+    "is_https": {
+      "pooled": 0.7494954809483425,
+      "hannousse": 0.5561087943982371,
+      "phiusiil": 0.7566937638565175
+    }
+  },
+  "hygiene": {
+    "duplicate_urls": 22,
+    "url_label_conflicts": 0,
+    "registrable_domains_with_both_labels": 217,
+    "registrable_domains_shared_between_sources": 497
+  }
+}
